@@ -4,9 +4,41 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
+    <groupId>io.github.starlangsoftware</groupId>
     <artifactId>CCG</artifactId>
     <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>NlpToolkit.CCG</name>
+    <description>Turkish CCG Implementations</description>
+    <url>https://github.com/StarlangSoftware/CCG</url>
+
+    <organization>
+        <name>io.github.starlangsoftware</name>
+        <url>https://github.com/starlangsoftware</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Olcay Taner Yildiz</name>
+            <email>olcay.yildiz@ozyegin.edu.tr</email>
+            <organization>Starlang Software</organization>
+            <organizationUrl>http://www.starlangyazilim.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/starlangsoftware/ccg.git</connection>
+        <developerConnection>scm:git:ssh://github.com:starlangsoftware/ccg.git</developerConnection>
+        <url>http://github.com/starlangsoftware/ccg/tree/master</url>
+    </scm>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
