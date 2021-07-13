@@ -31,6 +31,10 @@ public class CCGWordPair {
         return word.getUniversalDependency().toString();
     }
 
+    public boolean isToRoot() {
+        return getToUniversalDependency().equals("ROOT");
+    }
+
     public String getToUniversalDependency() {
         return toWord.getUniversalDependency().toString();
     }

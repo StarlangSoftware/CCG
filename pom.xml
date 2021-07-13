@@ -32,6 +32,12 @@
             <organization>Starlang Software</organization>
             <organizationUrl>http://www.starlangyazilim.com</organizationUrl>
         </developer>
+        <developer>
+            <name>Oguz Kerem Yildiz</name>
+            <email>oguzkeremyildiz@gmail.com</email>
+            <organization>Starlang Software</organization>
+            <organizationUrl>http://www.starlangyazilim.com</organizationUrl>
+        </developer>
     </developers>
 
     <scm>
