@@ -53,15 +53,11 @@ public class CCGGenerator {
         return current;
     }
 
-    private static boolean setRoot(ArrayList<CCGWordPair> sentence) {
-        boolean conj = false;
+    private static void setRoot(ArrayList<CCGWordPair> sentence) {
         int rootIndex = -1;
         HashSet<String> set = new HashSet<>();
         for (int i = 0; i < sentence.size(); i++) {
             CCGWordPair word = sentence.get(i);
-            if (word.getUniversalDependency().equals("CONJ")) {
-                conj = true;
-            }
             if (word.to() > 0) {
                 if (word.getToWord().getUniversalDependency().toString().equalsIgnoreCase("root")) {
                     set.add(word.getUniversalDependency());
@@ -87,10 +83,9 @@ public class CCGGenerator {
                 sentence.get(rootIndex).getWord().setCcg("S");
             }
         }
-        return conj;
     }
 
-    private static void setSentence(ArrayList<CCGWordPair> sentence, boolean conj) {
+    private static void setSentence(ArrayList<CCGWordPair> sentence) {
         for (CCGWordPair ccgWordPair : sentence) {
             switch (ccgWordPair.getUniversalDependency()) {
                 case "NSUBJ":
@@ -172,7 +167,7 @@ public class CCGGenerator {
                     break;
                 case "CC":
                     if (ccgWordPair.getToCcg() != null) {
-                        if (conj) {
+                        if (ccgWordPair.getToUniversalDependency().equals("CONJ")) {
                             ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "\\" + ccgWordPair.getToCcg() + ")" + "/" + ccgWordPair.getToCcg());
                         } else {
                             ccgWordPair.setCcg(ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg());
@@ -227,11 +222,11 @@ public class CCGGenerator {
 
     public static void generate(AnnotatedSentence sentence) {
         ArrayList<CCGWordPair> words = setWords(sentence);
-        boolean conj = setRoot(words);
+        setRoot(words);
         ArrayList<CCGWordPair> currentSentence;
         do {
             currentSentence = generateSentence(words);
-            setSentence(currentSentence, conj);
+            setSentence(currentSentence);
         } while (currentSentence.size() > 0);
     }
 }
