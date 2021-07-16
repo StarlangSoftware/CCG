@@ -7,17 +7,25 @@ import java.util.*;
 public class CCGGenerator {
 
     private static ArrayList<CCGWordPair> setWords(AnnotatedSentence sentence) {
+        HashSet<String> set = new HashSet<>();
+        CCGWordPair root = null;
         ArrayList<CCGWordPair> words = new ArrayList<>();
         int lastIndex = findLastIndex(sentence, words);
         int lastAddIndex = words.size();
         for (int i = 0; i < lastIndex; i++) {
             AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
             if (word.getUniversalDependency().to() == 0) {
-                words.add(words.size() - lastAddIndex, new CCGWordPair(word, null, i));
+                root = new CCGWordPair(word, null, i);
+                words.add(words.size() - lastAddIndex, root);
             } else {
-                words.add(words.size() - lastAddIndex, new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i));
+                CCGWordPair ccgWordPair = new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i);
+                if (ccgWordPair.isToRoot()) {
+                    set.add(ccgWordPair.getUniversalDependency());
+                }
+                words.add(words.size() - lastAddIndex, ccgWordPair);
             }
         }
+        setRoot(root, set);
         return words;
     }
 
@@ -53,34 +61,22 @@ public class CCGGenerator {
         return current;
     }
 
-    private static void setRoot(ArrayList<CCGWordPair> sentence) {
-        int rootIndex = -1;
-        HashSet<String> set = new HashSet<>();
-        for (int i = 0; i < sentence.size(); i++) {
-            CCGWordPair word = sentence.get(i);
-            if (word.to() > 0) {
-                if (word.getToWord().getUniversalDependency().toString().equalsIgnoreCase("root")) {
-                    set.add(word.getUniversalDependency());
-                }
-            } else {
-                rootIndex = i;
-            }
-        }
+    private static void setRoot(CCGWordPair root, HashSet<String> set) {
         if (set.contains("OBJ")) {
             if (set.contains("NSUBJ") || set.contains("CSUBJ")) {
                 if (set.contains("OBL")) {
-                    sentence.get(rootIndex).getWord().setCcg("((S\\NP)\\NP)\\NP)");
+                    root.setCcg("((S\\NP)\\NP)\\NP)");
                 } else {
-                    sentence.get(rootIndex).getWord().setCcg("(S\\NP[nom])\\NP");
+                    root.setCcg("(S\\NP[nom])\\NP");
                 }
             } else {
-                sentence.get(rootIndex).getWord().setCcg("S\\NP");
+                root.setCcg("S\\NP");
             }
         } else {
             if (set.contains("NSUBJ") || set.contains("CSUBJ")) {
-                sentence.get(rootIndex).getWord().setCcg("S\\NP[nom]");
+                root.setCcg("S\\NP[nom]");
             } else {
-                sentence.get(rootIndex).getWord().setCcg("S");
+                root.setCcg("S");
             }
         }
     }
@@ -222,7 +218,6 @@ public class CCGGenerator {
 
     public static void generate(AnnotatedSentence sentence) {
         ArrayList<CCGWordPair> words = setWords(sentence);
-        setRoot(words);
         ArrayList<CCGWordPair> currentSentence;
         do {
             currentSentence = generateSentence(words);
