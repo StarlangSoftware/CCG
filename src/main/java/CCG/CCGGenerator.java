@@ -16,7 +16,6 @@ public class CCGGenerator {
             AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
             if (word.getUniversalDependency().to() == 0) {
                 root = new CCGWordPair(word, null, i);
-                words.add(words.size() - lastAddIndex, root);
             } else {
                 CCGWordPair ccgWordPair = new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i);
                 if (ccgWordPair.isToRoot()) {
@@ -81,7 +80,8 @@ public class CCGGenerator {
         }
     }
 
-    private static void setSentence(ArrayList<CCGWordPair> sentence) {
+    private static ArrayList<CCGWordPair> setSentence(ArrayList<CCGWordPair> sentence) {
+        ArrayList<CCGWordPair> words = new ArrayList<>();
         for (CCGWordPair ccgWordPair : sentence) {
             switch (ccgWordPair.getUniversalDependency()) {
                 case "NSUBJ":
@@ -129,6 +129,10 @@ public class CCGGenerator {
                         } else {
                             ccgWordPair.setCcg(ccgWordPair.getToCcg() + ccgWordPair.findSlash() + ccgWordPair.getToCcg());
                         }
+                    } else {
+                        if (ccgWordPair.getCcg() == null) {
+                            words.add(ccgWordPair);
+                        }
                     }
                     break;
                 case "ADVCL":
@@ -137,6 +141,10 @@ public class CCGGenerator {
                 case "REPARANDUM":
                     if (ccgWordPair.getToCcg() != null) {
                         ccgWordPair.setCcg(ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg());
+                    } else {
+                        if (ccgWordPair.getCcg() == null) {
+                            words.add(ccgWordPair);
+                        }
                     }
                     break;
                 case "AUX":
@@ -145,6 +153,10 @@ public class CCGGenerator {
                 case "FIXED":
                     if (ccgWordPair.getToCcg() != null) {
                         ccgWordPair.setCcg(ccgWordPair.getToCcg() + "\\" + ccgWordPair.getToCcg());
+                    } else {
+                        if (ccgWordPair.getCcg() == null) {
+                            words.add(ccgWordPair);
+                        }
                     }
                     break;
                 case "OBL":
@@ -167,6 +179,10 @@ public class CCGGenerator {
                             ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "\\" + ccgWordPair.getToCcg() + ")" + "/" + ccgWordPair.getToCcg());
                         } else {
                             ccgWordPair.setCcg(ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg());
+                        }
+                    } else {
+                        if (ccgWordPair.getCcg() == null) {
+                            words.add(ccgWordPair);
                         }
                     }
                     break;
@@ -196,6 +212,10 @@ public class CCGGenerator {
                         } else {
                             ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "\\" + ccgWordPair.getToCcg() + ")" + "/" + ccgWordPair.getWord().getParse().getPos());
                         }
+                    } else {
+                        if (ccgWordPair.getCcg() == null) {
+                            words.add(ccgWordPair);
+                        }
                     }
                     break;
                 case "DISLOCATED":
@@ -214,14 +234,13 @@ public class CCGGenerator {
                     break;
             }
         }
+        return generateSentence(words);
     }
 
     public static void generate(AnnotatedSentence sentence) {
         ArrayList<CCGWordPair> words = setWords(sentence);
-        ArrayList<CCGWordPair> currentSentence;
         do {
-            currentSentence = generateSentence(words);
-            setSentence(currentSentence);
-        } while (currentSentence.size() > 0);
+            words = setSentence(words);
+        } while (!words.isEmpty());
     }
 }
