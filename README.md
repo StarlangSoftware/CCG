@@ -35,7 +35,7 @@ Use Git for cloning the code to your local or below line for Ubuntu:
 
 A directory called CCG will be created. Or you can use below link for exploring the code:
 
-	git clone https://github.com/olcaytaner/DataCollector.git
+	git clone https://github.com/StarlangSoftware/CCG.git
 
 ## Open project with IntelliJ IDEA
 
@@ -43,7 +43,7 @@ Steps for opening the cloned project:
 
 * Start IDE
 * Select **File | Open** from main menu
-* Choose `DataCollector/pom.xml` file
+* Choose `CCG/pom.xml` file
 * Select open as project option
 * Couple of seconds, dependencies with Maven will be downloaded. 
 
@@ -56,7 +56,7 @@ After being done with the downloading and Maven indexing, select **Build Project
 
 **From Console**
 
-Go to `DataCollector` directory and compile with 
+Go to `CCG` directory and compile with 
 
      mvn compile 
 
@@ -72,7 +72,7 @@ Use below line to generate jar file:
 
      mvn install
 
-DataCollector
+CCG
 ============
 + [Maven Usage](#maven-usage)
 
