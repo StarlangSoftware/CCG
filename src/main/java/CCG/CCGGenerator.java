@@ -64,7 +64,7 @@ public class CCGGenerator {
         if (set.contains("OBJ")) {
             if (set.contains("NSUBJ") || set.contains("CSUBJ")) {
                 if (set.contains("OBL")) {
-                    root.setCcg("((S\\NP)\\NP)\\NP)");
+                    root.setCcg("((S\\NP[nom])\\NP)\\NP)");
                 } else {
                     root.setCcg("(S\\NP[nom])\\NP");
                 }
@@ -163,9 +163,12 @@ public class CCGGenerator {
                 case "OBJ":
                 case "XCOMP":
                 case "CCOMP":
-                    // temporary solution
-                case "FLAT":
                     ccgWordPair.setCcg("NP");
+                    break;
+                case "FLAT":
+                    if (ccgWordPair.getToCcg() != null) {
+                        ccgWordPair.setCcg(ccgWordPair.getToCcg());
+                    }
                     break;
                 case "VOCATIVE":
                     ccgWordPair.setCcg("S" + ccgWordPair.findSlash() + "S");
@@ -208,9 +211,9 @@ public class CCGGenerator {
                 case "CONJ":
                     if (ccgWordPair.getToCcg() != null) {
                         if (ccgWordPair.getWord().getUniversalDependencyPos().equals(ccgWordPair.getToWord().getUniversalDependencyPos())) {
-                            ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "\\" + ccgWordPair.getToCcg() + ")" + "/" + ccgWordPair.getToCcg());
+                            ccgWordPair.setCcg("(X\\X)/X");
                         } else {
-                            ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "\\" + ccgWordPair.getToCcg() + ")" + "/" + ccgWordPair.getWord().getParse().getPos());
+                            ccgWordPair.setCcg("(X\\X)/Y");
                         }
                     } else {
                         if (ccgWordPair.getCcg() == null) {
