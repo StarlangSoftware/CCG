@@ -7,24 +7,27 @@ import java.util.*;
 public class CCGGenerator {
 
     private static ArrayList<CCGWordPair> setWords(AnnotatedSentence sentence) {
-        HashSet<String> set = new HashSet<>();
-        CCGWordPair root = null;
+        HashMap<CCGWordPair, HashSet<String>> map = new HashMap<>();
         ArrayList<CCGWordPair> words = new ArrayList<>();
         int lastIndex = findLastIndex(sentence, words);
         int lastAddIndex = words.size();
         for (int i = 0; i < lastIndex; i++) {
             AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
-            if (word.getUniversalDependency().to() == 0) {
-                root = new CCGWordPair(word, null, i);
-            } else {
+            if (word.getUniversalDependency().to() != 0 && !word.getUniversalDependency().toString().equals("PARATAXIS")) {
                 CCGWordPair ccgWordPair = new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i);
-                if (ccgWordPair.isToRoot()) {
-                    set.add(ccgWordPair.getUniversalDependency());
+                CCGWordPair to = new CCGWordPair((AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), null, word.getUniversalDependency().to() - 1);
+                if (ccgWordPair.isToRoot() || ccgWordPair.getToUniversalDependency().equals("PARATAXIS")) {
+                    if (!map.containsKey(to)) {
+                        map.put(to, new HashSet<>());
+                    }
+                    map.get(to).add(ccgWordPair.getUniversalDependency());
                 }
                 words.add(words.size() - lastAddIndex, ccgWordPair);
+            } else {
+                word.setCcg("S");
             }
         }
-        setRoot(root, set);
+        setRoots(map);
         return words;
     }
 
@@ -60,22 +63,22 @@ public class CCGGenerator {
         return current;
     }
 
-    private static void setRoot(CCGWordPair root, HashSet<String> set) {
-        if (set.contains("OBJ")) {
-            if (set.contains("NSUBJ") || set.contains("CSUBJ")) {
-                if (set.contains("OBL")) {
-                    root.setCcg("((S\\NP[nom])\\NP)\\NP)");
+    private static void setRoots(HashMap<CCGWordPair, HashSet<String>> map) {
+        for (CCGWordPair key : map.keySet()) {
+            if (map.get(key).contains("OBJ")) {
+                if (map.get(key).contains("NSUBJ") || map.get(key).contains("CSUBJ")) {
+                    if (map.get(key).contains("OBL")) {
+                        key.setCcg("((S\\NP[nom])\\NP)\\NP)");
+                    } else {
+                        key.setCcg("(S\\NP[nom])\\NP");
+                    }
                 } else {
-                    root.setCcg("(S\\NP[nom])\\NP");
+                    key.setCcg("S\\NP");
                 }
             } else {
-                root.setCcg("S\\NP");
-            }
-        } else {
-            if (set.contains("NSUBJ") || set.contains("CSUBJ")) {
-                root.setCcg("S\\NP[nom]");
-            } else {
-                root.setCcg("S");
+                if (map.get(key).contains("NSUBJ") || map.get(key).contains("CSUBJ")) {
+                    key.setCcg("S\\NP[nom]");
+                }
             }
         }
     }
@@ -98,7 +101,6 @@ public class CCGGenerator {
                     }
                     break;
                 case "MARK":
-                case "PARATAXIS":
                 case "DISCOURSE":
                     ccgWordPair.setCcg("S/S");
                     if (!ccgWordPair.isToRoot()) {

@@ -62,12 +62,25 @@ public class CCGWordPair {
         return "/";
     }
 
-    public int no() {
-        return no;
-    }
-
     @Override
     public String toString() {
         return word.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        if (toWord != null) {
+            return word.hashCode() ^ toWord.hashCode() ^ no;
+        }
+        return word.hashCode() ^ no;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof CCGWordPair)) {
+            return false;
+        }
+        CCGWordPair pair = (CCGWordPair) obj;
+        return this.word.equals(pair.word) && this.no == pair.no;
     }
 }
