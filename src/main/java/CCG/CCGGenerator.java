@@ -90,27 +90,17 @@ public class CCGGenerator {
                     break;
                 case "DET":
                 case "NUMMOD":
-                    ccgWordPair.setCcg("NP/NP");
-                    if (!ccgWordPair.isToRoot()) {
-                        ccgWordPair.setToCcg("NP");
-                    }
-                    break;
                 case "ACL":
                 case "AMOD":
-                    ccgWordPair.setCcg("(NP/NP)");
+                    ccgWordPair.setCcg("NP/NP");
                     if (!ccgWordPair.isToRoot()) {
                         ccgWordPair.setToCcg("NP");
                     }
                     break;
                 case "MARK":
                 case "PARATAXIS":
-                    ccgWordPair.setCcg("S/S");
-                    if (!ccgWordPair.isToRoot()) {
-                        ccgWordPair.setToCcg("S");
-                    }
-                    break;
                 case "DISCOURSE":
-                    ccgWordPair.setCcg("(S/S)");
+                    ccgWordPair.setCcg("S/S");
                     if (!ccgWordPair.isToRoot()) {
                         ccgWordPair.setToCcg("S");
                     }
@@ -203,17 +193,16 @@ public class CCGGenerator {
                     }
                     break;
                 case "CASE":
-                    ccgWordPair.setCcg("PP\\NP");
-                    if (!ccgWordPair.isToRoot()) {
-                        ccgWordPair.setToCcg("NP");
+                    if (ccgWordPair.getToCcg() != null) {
+                        ccgWordPair.setCcg("S/S\\" + ccgWordPair.getToCcg());
                     }
                     break;
                 case "CONJ":
                     if (ccgWordPair.getToCcg() != null) {
                         if (ccgWordPair.getWord().getUniversalDependencyPos().equals(ccgWordPair.getToWord().getUniversalDependencyPos())) {
-                            ccgWordPair.setCcg("(X\\X)/X");
+                            ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "\\" + ccgWordPair.getToCcg() + ")" + "/" + ccgWordPair.getToCcg());
                         } else {
-                            ccgWordPair.setCcg("(X\\X)/Y");
+                            ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "\\" + ccgWordPair.getToCcg() + ")" + "/" + ccgWordPair.getToWord().getPosTag());
                         }
                     } else {
                         if (ccgWordPair.getCcg() == null) {
