@@ -7,27 +7,36 @@ import java.util.*;
 public class CCGGenerator {
 
     private static ArrayList<CCGWordPair> setWords(AnnotatedSentence sentence) {
-        HashMap<CCGWordPair, HashSet<String>> map = new HashMap<>();
+        HashMap<Integer, HashSet<String>> map = new HashMap<>();
         ArrayList<CCGWordPair> words = new ArrayList<>();
         int lastIndex = findLastIndex(sentence, words);
         int lastAddIndex = words.size();
         for (int i = 0; i < lastIndex; i++) {
             AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
-            if (word.getUniversalDependency().to() != 0 && !word.getUniversalDependency().toString().equals("PARATAXIS")) {
+            if (word.getUniversalDependency().to() != 0 && !word.getUniversalDependency().toString().equals("PARATAXIS") && !word.getUniversalDependency().toString().endsWith("COMP")) {
                 CCGWordPair ccgWordPair = new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i);
-                CCGWordPair to = new CCGWordPair((AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), null, word.getUniversalDependency().to() - 1);
+                int toIndex = word.getUniversalDependency().to() - 1;
+                AnnotatedWord toWord = (AnnotatedWord) sentence.getWord(toIndex);
                 if (ccgWordPair.isToRoot() || ccgWordPair.getToUniversalDependency().equals("PARATAXIS")) {
-                    if (!map.containsKey(to)) {
-                        map.put(to, new HashSet<>());
+                    if (!map.containsKey(toIndex)) {
+                        map.put(toIndex, new HashSet<>());
                     }
-                    map.get(to).add(ccgWordPair.getUniversalDependency());
+                    map.get(toIndex).add(ccgWordPair.getUniversalDependency());
+                } else if ((word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ")) && toWord.getUniversalDependency().toString().endsWith("COMP")) {
+                    if (word.getCcg() == null) {
+                        toWord.setCcg("S/NP");
+                    } else {
+                        toWord.setCcg(toWord.getCcg() + "/NP");
+                    }
                 }
                 words.add(words.size() - lastAddIndex, ccgWordPair);
             } else {
-                word.setCcg("S");
+                if (word.getCcg() == null) {
+                    word.setCcg("S");
+                }
             }
         }
-        setRoots(map);
+        setRoots(map, sentence);
         return words;
     }
 
@@ -63,21 +72,21 @@ public class CCGGenerator {
         return current;
     }
 
-    private static void setRoots(HashMap<CCGWordPair, HashSet<String>> map) {
-        for (CCGWordPair key : map.keySet()) {
+    private static void setRoots(HashMap<Integer, HashSet<String>> map, AnnotatedSentence sentence) {
+        for (Integer key : map.keySet()) {
             if (map.get(key).contains("OBJ")) {
                 if (map.get(key).contains("NSUBJ") || map.get(key).contains("CSUBJ")) {
                     if (map.get(key).contains("OBL")) {
-                        key.setCcg("((S\\NP[nom])\\NP)\\NP)");
+                        ((AnnotatedWord) sentence.getWord(key)).setCcg("((S\\NP[nom])\\NP)\\NP)");
                     } else {
-                        key.setCcg("(S\\NP[nom])\\NP");
+                        ((AnnotatedWord) sentence.getWord(key)).setCcg("(S\\NP[nom])\\NP");
                     }
                 } else {
-                    key.setCcg("S\\NP");
+                    ((AnnotatedWord) sentence.getWord(key)).setCcg("S\\NP");
                 }
             } else {
                 if (map.get(key).contains("NSUBJ") || map.get(key).contains("CSUBJ")) {
-                    key.setCcg("S\\NP[nom]");
+                    ((AnnotatedWord) sentence.getWord(key)).setCcg("S\\NP[nom]");
                 }
             }
         }
@@ -92,26 +101,50 @@ public class CCGGenerator {
                     ccgWordPair.setCcg("NP[nom]");
                     break;
                 case "DET":
-                case "NUMMOD":
                 case "ACL":
                 case "AMOD":
                     ccgWordPair.setCcg("NP/NP");
-                    if (!ccgWordPair.isToRoot()) {
+                    String toCCG = ccgWordPair.getToCcg();
+                    if (toCCG == null) {
                         ccgWordPair.setToCcg("NP");
+                    } else {
+                        if (toCCG.contains("nom")) {
+                            ccgWordPair.setCcg("NP[nom]/NP[nom]");
+                        }
+                    }
+                    break;
+                case "NUMMOD":
+                    if (ccgWordPair.isToRoot() && (ccgWordPair.getToWord().getUniversalDependencyPos().equals("NOUN") || ccgWordPair.getToWord().getUniversalDependencyPos().equals("NUM"))) {
+                        ccgWordPair.setCcg(ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg());
+                    } else {
+                        ccgWordPair.setCcg("NP/NP");
+                        toCCG = ccgWordPair.getToCcg();
+                        if (toCCG == null) {
+                            ccgWordPair.setToCcg("NP");
+                        } else {
+                            if (toCCG.contains("nom")) {
+                                ccgWordPair.setCcg("NP[nom]/NP[nom]");
+                            }
+                        }
                     }
                     break;
                 case "MARK":
                 case "DISCOURSE":
                     ccgWordPair.setCcg("S/S");
-                    if (!ccgWordPair.isToRoot()) {
+                    if (ccgWordPair.getToCcg() == null) {
                         ccgWordPair.setToCcg("S");
                     }
                     break;
                 case "ORPHAN":
                 case "APPOS":
                     ccgWordPair.setCcg("NP\\NP");
-                    if (!ccgWordPair.isToRoot()) {
+                    toCCG = ccgWordPair.getToCcg();
+                    if (toCCG == null) {
                         ccgWordPair.setToCcg("NP");
+                    } else {
+                        if (toCCG.contains("nom")) {
+                            ccgWordPair.setCcg("NP[nom]/NP[nom]");
+                        }
                     }
                     break;
                 case "PUNCT":
@@ -153,8 +186,6 @@ public class CCGGenerator {
                     break;
                 case "OBL":
                 case "OBJ":
-                case "XCOMP":
-                case "CCOMP":
                     ccgWordPair.setCcg("NP");
                     break;
                 case "FLAT":
@@ -164,7 +195,7 @@ public class CCGGenerator {
                     break;
                 case "VOCATIVE":
                     ccgWordPair.setCcg("S" + ccgWordPair.findSlash() + "S");
-                    if (!ccgWordPair.isToRoot()) {
+                    if (ccgWordPair.getToCcg() == null) {
                         ccgWordPair.setToCcg("S");
                     }
                     break;
@@ -182,15 +213,24 @@ public class CCGGenerator {
                     }
                     break;
                 case "NMOD":
-                    if (ccgWordPair.getToUniversalDependency().equals("NSUBJ") || ccgWordPair.getToUniversalDependency().equals("CSUBJ")) {
-                        ccgWordPair.setCcg("NP[nom]/NP[nom]");
-                        if (!ccgWordPair.isToRoot()) {
-                            ccgWordPair.setToCcg("NP[nom]");
-                        }
+                    if (ccgWordPair.isToRoot() && (ccgWordPair.getToWord().getUniversalDependencyPos().equals("NOUN") || ccgWordPair.getToWord().getUniversalDependencyPos().equals("NUM"))) {
+                        ccgWordPair.setCcg(ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg());
                     } else {
-                        ccgWordPair.setCcg("NP/NP");
-                        if (!ccgWordPair.isToRoot()) {
-                            ccgWordPair.setToCcg("NP");
+                        if (ccgWordPair.getToUniversalDependency().equals("NSUBJ") || ccgWordPair.getToUniversalDependency().equals("CSUBJ")) {
+                            ccgWordPair.setCcg("NP[nom]/NP[nom]");
+                            if (ccgWordPair.getToCcg() == null) {
+                                ccgWordPair.setToCcg("NP[nom]");
+                            }
+                        } else {
+                            ccgWordPair.setCcg("NP/NP");
+                            toCCG = ccgWordPair.getToCcg();
+                            if (toCCG == null) {
+                                ccgWordPair.setToCcg("NP");
+                            } else {
+                                if (toCCG.contains("nom")) {
+                                    ccgWordPair.setCcg("NP[nom]/NP[nom]");
+                                }
+                            }
                         }
                     }
                     break;
@@ -214,13 +254,13 @@ public class CCGGenerator {
                     break;
                 case "DISLOCATED":
                     ccgWordPair.setCcg("NP" + ccgWordPair.findSlash() + "S");
-                    if (!ccgWordPair.isToRoot()) {
+                    if (ccgWordPair.getToCcg() == null) {
                         ccgWordPair.setToCcg("S");
                     }
                     break;
                 case "DEP":
                     ccgWordPair.setCcg("NP/S");
-                    if (!ccgWordPair.isToRoot()) {
+                    if (ccgWordPair.getToCcg() == null) {
                         ccgWordPair.setToCcg("S");
                     }
                     break;
