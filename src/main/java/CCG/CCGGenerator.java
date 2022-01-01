@@ -9,9 +9,7 @@ public class CCGGenerator {
     private static ArrayList<CCGWordPair> setWords(AnnotatedSentence sentence) {
         HashMap<Integer, HashSet<String>> map = new HashMap<>();
         ArrayList<CCGWordPair> words = new ArrayList<>();
-        int lastIndex = findLastIndex(sentence, words);
-        int lastAddIndex = words.size();
-        for (int i = 0; i < lastIndex; i++) {
+        for (int i = 0; i < sentence.wordCount(); i++) {
             AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
             if (word.getUniversalDependency().to() != 0 && !word.getUniversalDependency().toString().equals("PARATAXIS") && !word.getUniversalDependency().toString().endsWith("COMP")) {
                 CCGWordPair ccgWordPair = new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i);
@@ -29,7 +27,7 @@ public class CCGGenerator {
                         toWord.setCcg(toWord.getCcg() + "/NP");
                     }
                 }
-                words.add(words.size() - lastAddIndex, ccgWordPair);
+                words.add(ccgWordPair);
             } else {
                 if (word.getCcg() == null) {
                     word.setCcg("S");
@@ -38,28 +36,6 @@ public class CCGGenerator {
         }
         setRoots(map, sentence);
         return words;
-    }
-
-    private static int findLastIndex(AnnotatedSentence sentence, ArrayList<CCGWordPair> words) {
-        int lastIndex = sentence.wordCount();
-        for (int i = sentence.wordCount() - 1; i > -1; i--) {
-            AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
-            if (word.isPunctuation()) {
-                lastIndex = i;
-                if (!word.getName().equals(".") && !word.getName().equals(":") && !word.getName().equals("...") && !word.getName().equals("?") && !word.getName().equals("!")) {
-                    if (word.getUniversalDependency().to() == 0) {
-                        words.add(new CCGWordPair(word, null, i));
-                    } else {
-                        words.add(new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i));
-                    }
-                } else {
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-        return lastIndex;
     }
 
     private static ArrayList<CCGWordPair> generateSentence(ArrayList<CCGWordPair> sentence) {
