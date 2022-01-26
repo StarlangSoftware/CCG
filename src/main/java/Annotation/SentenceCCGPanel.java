@@ -42,4 +42,9 @@ public class SentenceCCGPanel extends SentenceAnnotatorPanel {
     protected void setBounds() {
 
     }
+
+    @Override
+    protected void setLineSpace() {
+        lineSpace = 80;
+    }
 }
