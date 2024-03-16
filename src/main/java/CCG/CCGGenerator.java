@@ -69,6 +69,7 @@ public class CCGGenerator {
     }
 
     private static ArrayList<CCGWordPair> setSentence(ArrayList<CCGWordPair> sentence) {
+        String toCCG;
         ArrayList<CCGWordPair> words = new ArrayList<>();
         for (CCGWordPair ccgWordPair : sentence) {
             switch (ccgWordPair.getUniversalDependency()) {
@@ -80,7 +81,7 @@ public class CCGGenerator {
                 case "ACL":
                 case "AMOD":
                     ccgWordPair.setCcg("NP/NP");
-                    String toCCG = ccgWordPair.getToCcg();
+                    toCCG = ccgWordPair.getToCcg();
                     if (toCCG == null) {
                         ccgWordPair.setToCcg("NP");
                     } else {
