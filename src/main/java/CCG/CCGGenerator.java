@@ -250,8 +250,14 @@ public class CCGGenerator {
 
     public static void generate(AnnotatedSentence sentence) {
         ArrayList<CCGWordPair> words = setWords(sentence);
+        int lastSize = words.size();
         do {
             words = setSentence(words);
+            if (lastSize == words.size()) {
+                System.out.println(sentence.getFileName() + " not done.");
+                break;
+            }
+            lastSize = words.size();
         } while (!words.isEmpty());
     }
 }
