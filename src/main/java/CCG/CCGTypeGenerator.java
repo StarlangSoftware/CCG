@@ -7,11 +7,11 @@ import java.util.ArrayList;
 
 public class CCGTypeGenerator {
 
-    private static void deleteWords(Pair<Pair<Integer, Integer>, String> p, ArrayList<CCGWord> words) {
+    private static void deleteWords(Pair<Pair<Integer, Integer>, CCGWord> p, ArrayList<CCGWord> words) {
         if (p.getKey().getValue() >= p.getKey().getKey()) {
             words.subList(p.getKey().getKey(), p.getKey().getValue() + 1).clear();
         }
-        words.add(p.getKey().getKey(), new CCGWord(p.getValue()));
+        words.add(p.getKey().getKey(), p.getValue());
     }
 
     private static ArrayList<CCGWord> constructCCGWord(AnnotatedSentence sentence) {
@@ -63,7 +63,7 @@ public class CCGTypeGenerator {
         return -1;
     }
 
-    private static Pair<Pair<Integer, Integer>, String> generateCCGTypes(ArrayList<CCGWord> words, int start, ArrayList<Type> types) throws WrongCCGException {
+    private static Pair<Pair<Integer, Integer>, CCGWord> generateCCGTypes(ArrayList<CCGWord> words, int start, ArrayList<Type> types) throws WrongCCGException {
         int i = start, j = start;
         CCGWord word = words.get(start);
         while (word.size() > 1) {
@@ -73,7 +73,7 @@ public class CCGTypeGenerator {
                     if (words.get(j + 1).size() > 1) {
                         if (word.getCCG().equals(words.get(j + 1).getFirstCCG())) {
                             // forward composition
-                            types.add(Type.FORWARD);
+                            types.add(Type.FORWARD_COMPOSITION);
                             word.composition(words.get(j + 1));
                             j++;
                         }
@@ -95,7 +95,7 @@ public class CCGTypeGenerator {
                     if (words.get(i - 1).size() > 1) {
                         if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
                             // backward composition
-                            types.add(Type.BACKWARD);
+                            types.add(Type.BACKWARD_COMPOSITION);
                             word.composition(words.get(i - 1));
                             i--;
                         }
@@ -113,7 +113,7 @@ public class CCGTypeGenerator {
                 }
             }
         }
-        return new Pair<>(new Pair<>(i, j), word.getCCG());
+        return new Pair<>(new Pair<>(i, j), word);
     }
 
     public static ArrayList<Type> generate(AnnotatedSentence sentence) throws WrongCCGException {
@@ -129,7 +129,7 @@ public class CCGTypeGenerator {
                 System.out.println(words.get(0).getCCG());
                 return types;
             }
-            Pair<Pair<Integer, Integer>, String> p = generateCCGTypes(words, startIndex, types);
+            Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, startIndex, types);
             deleteWords(p, words);
         }
         // last CCG
