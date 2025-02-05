@@ -10,16 +10,30 @@ public class CCGWord {
     public CCGWord(String word) {
         this.ccg = new LinkedList<>();
         this.types = new LinkedList<>();
-        boolean open = false;
+        splitCCG(word);
+        if (ccg.size() == 1) {
+            String ccg = this.ccg.getFirst();
+            if (ccg.charAt(0) == '(') {
+                splitCCG(ccg.substring(1, ccg.length() - 1));
+            }
+        }
+    }
+
+    private void splitCCG(String word) {
+        this.ccg.clear();
+        this.types.clear();
+        int open = 0;
         StringBuilder current = new StringBuilder();
         for (int i = 0; i < word.length(); i++) {
             if (word.charAt(i) == '(') {
-                open = true;
+                open++;
+                current.append(word.charAt(i));
             } else if (word.charAt(i) == ')') {
-                open = false;
+                open--;
+                current.append(word.charAt(i));
             } else {
                 if (word.charAt(i) == '/') {
-                    if (!open) {
+                    if (open == 0) {
                         ccg.add(current.toString());
                         types.add(Type.FORWARD);
                         current = new StringBuilder();
@@ -27,7 +41,7 @@ public class CCGWord {
                         current.append(word.charAt(i));
                     }
                 } else if (word.charAt(i) == '\\') {
-                    if (!open) {
+                    if (open == 0) {
                         ccg.add(current.toString());
                         types.add(Type.BACKWARD);
                         current = new StringBuilder();
@@ -75,9 +89,32 @@ public class CCGWord {
     public void application() {
         ccg.removeLast();
         types.removeLast();
+        if (ccg.size() == 1) {
+            String ccg = getCCG();
+            if (ccg.charAt(0) == '(') {
+                splitCCG(ccg.substring(1, ccg.length() - 1));
+            }
+        }
     }
 
     public int size() {
         return ccg.size();
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(");
+        for (int i = 0; i < ccg.size(); i++) {
+            if (i != 0) {
+                if (types.get(i - 1).equals(Type.FORWARD)) {
+                    sb.append("/");
+                } else {
+                    sb.append("\\");
+                }
+            }
+            sb.append(ccg.get(i));
+        }
+        sb.append(")");
+        return sb.toString();
     }
 }

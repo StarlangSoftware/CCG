@@ -35,6 +35,9 @@ public class CCGTypeGenerator {
                             if (word.getCCG().equals(words.get(i + 1).getFirstCCG())) {
                                 return i;
                             }
+                            if (word.getCCG().equals(words.get(i + 1).toString())) {
+                                return i;
+                            }
                         } else {
                             if (word.getCCG().equals(words.get(i + 1).getCCG())) {
                                 return i;
@@ -47,6 +50,9 @@ public class CCGTypeGenerator {
                     if (i - 1 >= 0) {
                         if (words.get(i - 1).size() > 1) {
                             if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
+                                return i;
+                            }
+                            if (word.getCCG().equals(words.get(i - 1).toString())) {
                                 return i;
                             }
                         } else {
@@ -76,6 +82,11 @@ public class CCGTypeGenerator {
                             types.add(Type.FORWARD_COMPOSITION);
                             word.composition(words.get(j + 1));
                             j++;
+                        } else if (word.getCCG().equals(words.get(j + 1).toString())) {
+                            // forward application
+                            types.add(Type.FORWARD);
+                            word.application();
+                            j++;
                         }
                     } else if (word.getCCG().equals(words.get(j + 1).getCCG())) {
                         // forward application
@@ -97,6 +108,11 @@ public class CCGTypeGenerator {
                             // backward composition
                             types.add(Type.BACKWARD_COMPOSITION);
                             word.composition(words.get(i - 1));
+                            i--;
+                        } else if (word.getCCG().equals(words.get(i - 1).toString())) {
+                            // backward application
+                            types.add(Type.BACKWARD);
+                            word.application();
                             i--;
                         }
                     } else if (word.getCCG().equals(words.get(i - 1).getCCG())) {
