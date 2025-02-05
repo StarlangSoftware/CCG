@@ -79,10 +79,12 @@ public class CCGWord {
         this.types.addAll(next.types);
     }
 
-    public void composition(CCGWord next) {
+    public boolean composition(CCGWord next) {
+        boolean isCrossed = !this.types.getLast().equals(next.types.getFirst());
         this.application();
         next.removeFirstCCG();
         add(next);
+        return isCrossed;
     }
 
     // forward and backward application

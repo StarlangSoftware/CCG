@@ -79,8 +79,11 @@ public class CCGTypeGenerator {
                     if (words.get(j + 1).size() > 1) {
                         if (word.getCCG().equals(words.get(j + 1).getFirstCCG())) {
                             // forward composition
-                            types.add(Type.FORWARD_COMPOSITION);
-                            word.composition(words.get(j + 1));
+                            if (word.composition(words.get(j + 1))) {
+                                types.add(Type.FORWARD_CROSSED_COMPOSITION);
+                            } else {
+                                types.add(Type.FORWARD_COMPOSITION);
+                            }
                             j++;
                         } else if (word.getCCG().equals(words.get(j + 1).toString())) {
                             // forward application
@@ -106,8 +109,11 @@ public class CCGTypeGenerator {
                     if (words.get(i - 1).size() > 1) {
                         if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
                             // backward composition
-                            types.add(Type.BACKWARD_COMPOSITION);
-                            word.composition(words.get(i - 1));
+                            if (word.composition(words.get(i - 1))) {
+                                types.add(Type.BACKWARD_CROSSED_COMPOSITION);
+                            } else {
+                                types.add(Type.BACKWARD_COMPOSITION);
+                            }
                             i--;
                         } else if (word.getCCG().equals(words.get(i - 1).toString())) {
                             // backward application
