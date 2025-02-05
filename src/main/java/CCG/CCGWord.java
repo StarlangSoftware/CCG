@@ -81,7 +81,8 @@ public class CCGWord {
 
     public boolean composition(CCGWord next) {
         boolean isCrossed = !this.types.getLast().equals(next.types.getFirst());
-        this.application();
+        ccg.removeLast();
+        types.removeLast();
         next.removeFirstCCG();
         add(next);
         return isCrossed;
