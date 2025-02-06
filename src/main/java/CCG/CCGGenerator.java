@@ -195,6 +195,9 @@ public class CCGGenerator {
     }
 
     public static void generate(AnnotatedSentence sentence) {
+        for (int i = 0; i < sentence.getWords().size(); i++) {
+            ((AnnotatedWord) sentence.getWord(i)).setCcg(null);
+        }
         ArrayList<CCGWordPair> words = setWords(sentence);
         int lastSize = words.size();
         do {
