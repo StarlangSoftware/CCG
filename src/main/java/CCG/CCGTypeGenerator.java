@@ -138,24 +138,52 @@ public class CCGTypeGenerator {
         return new Pair<>(new Pair<>(i, j), word);
     }
 
+    private static boolean condition(ArrayList<CCGWord> words, int sentenceCount) {
+        int count = 0;
+        for (CCGWord word : words) {
+            if (word.size() == 1 && word.getCCG().equals("S")) {
+                count++;
+            } else {
+                return true;
+            }
+        }
+        return count != sentenceCount;
+    }
+
+    private static int sentenceCount(AnnotatedSentence sentence) {
+        int count = 1;
+        for (int i = 0; i < sentence.wordCount(); i++) {
+            AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
+            if (word.getUniversalDependency().toString().equals("PARATAXIS")) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public static ArrayList<Type> generate(AnnotatedSentence sentence) throws WrongCCGException {
         ArrayList<Type> types = new ArrayList<>();
         ArrayList<CCGWord> words = constructCCGWord(sentence);
-        while (words.size() > 1) {
+        int sentenceCount = sentenceCount(sentence);
+        while (condition(words, sentenceCount)) {
             int startIndex = findIndex(words);
             if (startIndex == -1) {
-                if (words.size() > 1) {
+                if (condition(words, sentenceCount)) {
                     throw new WrongCCGException();
                 }
-                // last CCG
-                System.out.println(words.get(0).getCCG());
+                // last CCGs
+                for (CCGWord word : words) {
+                    System.out.println(word.getCCG());
+                }
                 return types;
             }
             Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, startIndex, types);
             deleteWords(p, words);
         }
-        // last CCG
-        System.out.println(words.get(0).getCCG());
+        // last CCGs
+        for (CCGWord word : words) {
+            System.out.println(word.getCCG());
+        }
         return types;
     }
 }
