@@ -14,7 +14,6 @@ public class CCGGenerator {
             if (word.getUniversalDependency().to() != 0 && !word.getUniversalDependency().toString().equals("PARATAXIS")) {
                 CCGWordPair ccgWordPair = new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i);
                 int toIndex = word.getUniversalDependency().to() - 1;
-                AnnotatedWord toWord = (AnnotatedWord) sentence.getWord(toIndex);
                 if (ccgWordPair.isToRoot() || ccgWordPair.getToUniversalDependency().equals("PARATAXIS")) {
                     if (!map.containsKey(toIndex)) {
                         map.put(toIndex, 0);
@@ -22,16 +21,8 @@ public class CCGGenerator {
                     if (ccgWordPair.getUniversalDependency().equals("OBJ") || ccgWordPair.getUniversalDependency().equals("OBL") || ccgWordPair.getUniversalDependency().equals("NSUBJ") || ccgWordPair.getUniversalDependency().equals("CSUBJ") || ccgWordPair.getUniversalDependency().endsWith("COMP")) {
                         map.put(toIndex, map.get(toIndex) + 1);
                     }
-                } else if (word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ") || word.getUniversalDependency().toString().endsWith("COMP")) {
-                    if (toWord.getCcg() == null) {
-                        toWord.setCcg("(S/NP)");
-                    } else {
-                        toWord.setCcg("(" + toWord.getCcg() + "/NP)");
-                    }
                 }
-                if (ccgWordPair.getCcg() == null) {
-                    words.add(ccgWordPair);
-                }
+                words.add(ccgWordPair);
             }
         }
         setRoots(map, sentence);
@@ -187,5 +178,20 @@ public class CCGGenerator {
             }
             lastSize = words.size();
         } while (!words.isEmpty());
+        if (words.isEmpty()) {
+            for (int i = 0; i < sentence.getWords().size(); i++) {
+                AnnotatedWord word = ((AnnotatedWord) sentence.getWord(i));
+                if (word.getUniversalDependency().to() != 0) {
+                    AnnotatedWord toWord = ((AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1));
+                    if (!toWord.getUniversalDependency().toString().equals("ROOT") && (word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ") || word.getUniversalDependency().toString().endsWith("COMP"))) {
+                        if (toWord.getCcg() == null) {
+                            toWord.setCcg("(S\\NP)");
+                        } else {
+                            toWord.setCcg("(" + toWord.getCcg() + "\\NP)");
+                        }
+                    }
+                }
+            }
+        }
     }
 }
