@@ -22,14 +22,16 @@ public class CCGGenerator {
                     if (ccgWordPair.getUniversalDependency().equals("OBJ") || ccgWordPair.getUniversalDependency().equals("OBL") || ccgWordPair.getUniversalDependency().equals("NSUBJ") || ccgWordPair.getUniversalDependency().equals("CSUBJ") || ccgWordPair.getUniversalDependency().endsWith("COMP")) {
                         map.put(toIndex, map.get(toIndex) + 1);
                     }
-                } else if ((word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ")) && toWord.getUniversalDependency().toString().endsWith("COMP")) {
-                    if (word.getCcg() == null) {
+                } else if (word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ") || word.getUniversalDependency().toString().endsWith("COMP")) {
+                    if (toWord.getCcg() == null) {
                         toWord.setCcg("(S/NP)");
                     } else {
                         toWord.setCcg("(" + toWord.getCcg() + "/NP)");
                     }
                 }
-                words.add(ccgWordPair);
+                if (ccgWordPair.getCcg() == null) {
+                    words.add(ccgWordPair);
+                }
             }
         }
         setRoots(map, sentence);
@@ -60,7 +62,6 @@ public class CCGGenerator {
     }
 
     private static ArrayList<CCGWordPair> setSentence(ArrayList<CCGWordPair> sentence) {
-        String toCCG;
         ArrayList<CCGWordPair> words = new ArrayList<>();
         for (CCGWordPair ccgWordPair : sentence) {
             switch (ccgWordPair.getUniversalDependency()) {
@@ -81,8 +82,7 @@ public class CCGGenerator {
                         ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg() + ")");
                     } else {
                         ccgWordPair.setCcg("(NP/NP)");
-                        toCCG = ccgWordPair.getToCcg();
-                        if (toCCG == null) {
+                        if (ccgWordPair.getToCcg() == null) {
                             ccgWordPair.setToCcg("NP");
                         }
                     }
@@ -97,8 +97,7 @@ public class CCGGenerator {
                 case "ORPHAN":
                 case "APPOS":
                     ccgWordPair.setCcg("(NP\\NP)");
-                    toCCG = ccgWordPair.getToCcg();
-                    if (toCCG == null) {
+                    if (ccgWordPair.getToCcg() == null) {
                         ccgWordPair.setToCcg("NP");
                     }
                     break;
