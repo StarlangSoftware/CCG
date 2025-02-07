@@ -7,7 +7,7 @@ import java.util.*;
 public class CCGGenerator {
 
     private static ArrayList<CCGWordPair> setWords(AnnotatedSentence sentence) {
-        HashMap<Integer, ArrayList<String>> map = new HashMap<>();
+        HashMap<Integer, Integer> map = new HashMap<>();
         ArrayList<CCGWordPair> words = new ArrayList<>();
         for (int i = 0; i < sentence.wordCount(); i++) {
             AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
@@ -15,11 +15,13 @@ public class CCGGenerator {
                 CCGWordPair ccgWordPair = new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i);
                 int toIndex = word.getUniversalDependency().to() - 1;
                 AnnotatedWord toWord = (AnnotatedWord) sentence.getWord(toIndex);
-                if (ccgWordPair.isToRoot() || ccgWordPair.getToUniversalDependency().equals("PARATAXIS")) {
+                if (ccgWordPair.isToRoot() || ccgWordPair.getToUniversalDependency().equals("PARATAXIS") || ccgWordPair.getToUniversalDependency().endsWith("COMP")) {
                     if (!map.containsKey(toIndex)) {
-                        map.put(toIndex, new ArrayList<>());
+                        map.put(toIndex, 0);
                     }
-                    map.get(toIndex).add(ccgWordPair.getUniversalDependency());
+                    if (ccgWordPair.getUniversalDependency().equals("OBJ") || ccgWordPair.getUniversalDependency().equals("OBL") || ccgWordPair.getUniversalDependency().equals("NSUBJ") || ccgWordPair.getUniversalDependency().equals("CSUBJ")) {
+                        map.put(toIndex, map.get(toIndex) + 1);
+                    }
                 } else if ((word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ")) && toWord.getUniversalDependency().toString().endsWith("COMP")) {
                     if (word.getCcg() == null) {
                         toWord.setCcg("(S/NP)");
@@ -28,10 +30,6 @@ public class CCGGenerator {
                     }
                 }
                 words.add(ccgWordPair);
-            } else {
-                if (word.getCcg() == null) {
-                    word.setCcg("S");
-                }
             }
         }
         setRoots(map, sentence);
@@ -55,17 +53,9 @@ public class CCGGenerator {
         return setRoot(count - 1, "(" + root + "\\NP)");
     }
 
-    private static void setRoots(HashMap<Integer, ArrayList<String>> map, AnnotatedSentence sentence) {
+    private static void setRoots(HashMap<Integer, Integer> map, AnnotatedSentence sentence) {
         for (Integer key : map.keySet()) {
-            int npCount = 0;
-            for (int i = 0; i < map.get(key).size(); i++) {
-                if (map.get(key).get(i).equals("OBJ") || map.get(key).get(i).equals("OBL") || map.get(key).get(i).equals("NSUBJ") || map.get(key).get(i).equals("CSUBJ")) {
-                    npCount++;
-                }
-            }
-            if (npCount > 0) {
-                ((AnnotatedWord) sentence.getWord(key)).setCcg(setRoot(npCount, "S"));
-            }
+            ((AnnotatedWord) sentence.getWord(key)).setCcg(setRoot(map.get(key), "S"));
         }
     }
 
