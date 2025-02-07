@@ -11,15 +11,15 @@ public class CCGGenerator {
         ArrayList<CCGWordPair> words = new ArrayList<>();
         for (int i = 0; i < sentence.wordCount(); i++) {
             AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
-            if (word.getUniversalDependency().to() != 0 && !word.getUniversalDependency().toString().equals("PARATAXIS") && !word.getUniversalDependency().toString().endsWith("COMP")) {
+            if (word.getUniversalDependency().to() != 0 && !word.getUniversalDependency().toString().equals("PARATAXIS")) {
                 CCGWordPair ccgWordPair = new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i);
                 int toIndex = word.getUniversalDependency().to() - 1;
                 AnnotatedWord toWord = (AnnotatedWord) sentence.getWord(toIndex);
-                if (ccgWordPair.isToRoot() || ccgWordPair.getToUniversalDependency().equals("PARATAXIS") || ccgWordPair.getToUniversalDependency().endsWith("COMP")) {
+                if (ccgWordPair.isToRoot() || ccgWordPair.getToUniversalDependency().equals("PARATAXIS")) {
                     if (!map.containsKey(toIndex)) {
                         map.put(toIndex, 0);
                     }
-                    if (ccgWordPair.getUniversalDependency().equals("OBJ") || ccgWordPair.getUniversalDependency().equals("OBL") || ccgWordPair.getUniversalDependency().equals("NSUBJ") || ccgWordPair.getUniversalDependency().equals("CSUBJ")) {
+                    if (ccgWordPair.getUniversalDependency().equals("OBJ") || ccgWordPair.getUniversalDependency().equals("OBL") || ccgWordPair.getUniversalDependency().equals("NSUBJ") || ccgWordPair.getUniversalDependency().equals("CSUBJ") || ccgWordPair.getUniversalDependency().endsWith("COMP")) {
                         map.put(toIndex, map.get(toIndex) + 1);
                     }
                 } else if ((word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ")) && toWord.getUniversalDependency().toString().endsWith("COMP")) {
@@ -68,6 +68,8 @@ public class CCGGenerator {
                 case "CSUBJ":
                 case "OBL":
                 case "OBJ":
+                case "CCOMP":
+                case "XCOMP":
                     ccgWordPair.setCcg("NP");
                     break;
                 case "DET":
