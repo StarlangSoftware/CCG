@@ -74,18 +74,8 @@ public class CCGGenerator {
                 case "ACL":
                 case "AMOD":
                 case "NMOD":
-                    if (ccgWordPair.getToCcg() != null) {
-                        ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg() + ")");
-                    } else {
-                        ccgWordPair.setCcg("(NP/NP)");
-                        toCCG = ccgWordPair.getToCcg();
-                        if (toCCG == null) {
-                            ccgWordPair.setToCcg("NP");
-                        }
-                    }
-                    break;
                 case "NUMMOD":
-                    if (ccgWordPair.isToRoot() && (ccgWordPair.getToWord().getUniversalDependencyPos().equals("NOUN") || ccgWordPair.getToWord().getUniversalDependencyPos().equals("NUM"))) {
+                    if (ccgWordPair.getToCcg() != null) {
                         ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg() + ")");
                     } else {
                         ccgWordPair.setCcg("(NP/NP)");
@@ -127,6 +117,7 @@ public class CCGGenerator {
                 case "ADVMOD":
                 case "COMPOUND":
                 case "REPARANDUM":
+                case "CC":
                     if (ccgWordPair.getToCcg() != null) {
                         ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg() + ")");
                     } else {
@@ -158,9 +149,6 @@ public class CCGGenerator {
                     if (ccgWordPair.getToCcg() == null) {
                         ccgWordPair.setToCcg("S");
                     }
-                    break;
-                case "CC":
-                    ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg() + ")");
                     break;
                 case "CASE":
                     ccgWordPair.setCcg("(NP\\NP)");
