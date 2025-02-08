@@ -172,18 +172,28 @@ public class CCGTypeGenerator {
                     throw new WrongCCGException();
                 }
                 // last CCGs
-                for (CCGWord word : words) {
-                    System.out.println(word.getCCG());
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < words.size(); i++) {
+                    sb.append(words.get(i).getCCG());
+                    if (i + 1 != words.size()) {
+                        sb.append(",");
+                    }
                 }
+                System.out.println(sb);
                 return types;
             }
             Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, startIndex, types);
             deleteWords(p, words);
         }
         // last CCGs
-        for (CCGWord word : words) {
-            System.out.println(word.getCCG());
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < words.size(); i++) {
+            sb.append(words.get(i).getCCG());
+            if (i + 1 != words.size()) {
+                sb.append(",");
+            }
         }
+        System.out.println(sb);
         return types;
     }
 }

@@ -177,7 +177,7 @@ public class CCGGenerator {
                 AnnotatedWord word = ((AnnotatedWord) sentence.getWord(i));
                 if (word.getUniversalDependency().to() != 0) {
                     AnnotatedWord toWord = ((AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1));
-                    if (!toWord.getUniversalDependency().toString().equals("ROOT") && (word.getUniversalDependency().toString().equals("IOBJ") || word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ") || word.getUniversalDependency().toString().endsWith("COMP"))) {
+                    if ((!toWord.getUniversalDependency().toString().equals("PARATAXIS") && !toWord.getUniversalDependency().toString().equals("ROOT")) && (word.getUniversalDependency().toString().equals("IOBJ") || word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ") || word.getUniversalDependency().toString().endsWith("COMP"))) {
                         if (toWord.getCcg() == null) {
                             toWord.setCcg("(S\\NP)");
                         } else {
