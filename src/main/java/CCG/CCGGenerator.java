@@ -18,7 +18,7 @@ public class CCGGenerator {
                     if (!map.containsKey(toIndex)) {
                         map.put(toIndex, 0);
                     }
-                    if (ccgWordPair.getUniversalDependency().equals("OBJ") || ccgWordPair.getUniversalDependency().equals("OBL") || ccgWordPair.getUniversalDependency().equals("NSUBJ") || ccgWordPair.getUniversalDependency().equals("CSUBJ") || ccgWordPair.getUniversalDependency().endsWith("COMP")) {
+                    if (ccgWordPair.getUniversalDependency().equals("IOBJ") || ccgWordPair.getUniversalDependency().equals("OBJ") || ccgWordPair.getUniversalDependency().equals("OBL") || ccgWordPair.getUniversalDependency().equals("NSUBJ") || ccgWordPair.getUniversalDependency().equals("CSUBJ") || ccgWordPair.getUniversalDependency().endsWith("COMP")) {
                         map.put(toIndex, map.get(toIndex) + 1);
                     }
                 }
@@ -62,21 +62,8 @@ public class CCGGenerator {
                 case "OBJ":
                 case "CCOMP":
                 case "XCOMP":
+                case "IOBJ":
                     ccgWordPair.setCcg("NP");
-                    break;
-                case "DET":
-                case "ACL":
-                case "AMOD":
-                case "NMOD":
-                case "NUMMOD":
-                    if (ccgWordPair.getToCcg() != null) {
-                        ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg() + ")");
-                    } else {
-                        ccgWordPair.setCcg("(NP/NP)");
-                        if (ccgWordPair.getToCcg() == null) {
-                            ccgWordPair.setToCcg("NP");
-                        }
-                    }
                     break;
                 case "MARK":
                 case "DISCOURSE":
@@ -110,6 +97,11 @@ public class CCGGenerator {
                 case "COMPOUND":
                 case "REPARANDUM":
                 case "CC":
+                case "DET":
+                case "ACL":
+                case "AMOD":
+                case "NMOD":
+                case "NUMMOD":
                     if (ccgWordPair.getToCcg() != null) {
                         ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg() + ")");
                     } else {
@@ -134,6 +126,8 @@ public class CCGGenerator {
                 case "FLAT":
                     if (ccgWordPair.getToCcg() != null) {
                         ccgWordPair.setCcg(ccgWordPair.getToCcg());
+                    } else {
+                        words.add(ccgWordPair);
                     }
                     break;
                 case "VOCATIVE":
@@ -183,7 +177,7 @@ public class CCGGenerator {
                 AnnotatedWord word = ((AnnotatedWord) sentence.getWord(i));
                 if (word.getUniversalDependency().to() != 0) {
                     AnnotatedWord toWord = ((AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1));
-                    if (!toWord.getUniversalDependency().toString().equals("ROOT") && (word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ") || word.getUniversalDependency().toString().endsWith("COMP"))) {
+                    if (!toWord.getUniversalDependency().toString().equals("ROOT") && (word.getUniversalDependency().toString().equals("IOBJ") || word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ") || word.getUniversalDependency().toString().endsWith("COMP"))) {
                         if (toWord.getCcg() == null) {
                             toWord.setCcg("(S\\NP)");
                         } else {
