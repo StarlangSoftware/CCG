@@ -1,6 +1,7 @@
 package CCG;
 
 import AnnotatedSentence.*;
+import Cookies.Set.DisjointSet;
 import Cookies.Tuple.Pair;
 
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public class CCGTypeGenerator {
         for (int i = 0; i < sentence.wordCount(); i++) {
             AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
             if (!word.isPunctuation()) {
-                words.add(new CCGWord(word.getCcg()));
+                words.add(new CCGWord(word.getCcg(), word.getUniversalDependency().toString()));
             }
         }
         return words;
@@ -60,8 +61,6 @@ public class CCGTypeGenerator {
                                 return i;
                             }
                         }
-                    } else {
-                        throw new WrongCCGException();
                     }
                 }
             }
@@ -88,13 +87,13 @@ public class CCGTypeGenerator {
                         } else if (word.getCCG().equals(words.get(j + 1).toString())) {
                             // forward application
                             types.add(Type.FORWARD);
-                            word.application();
+                            word.application(words.get(j + 1).getUniversalDependency());
                             j++;
                         }
                     } else if (word.getCCG().equals(words.get(j + 1).getCCG())) {
                         // forward application
                         types.add(Type.FORWARD);
-                        word.application();
+                        word.application(words.get(j + 1).getUniversalDependency());
                         j++;
                     }
                     if (startJ == j) {
@@ -118,79 +117,106 @@ public class CCGTypeGenerator {
                         } else if (word.getCCG().equals(words.get(i - 1).toString())) {
                             // backward application
                             types.add(Type.BACKWARD);
-                            word.application();
+                            word.application(words.get(i - 1).getUniversalDependency());
                             i--;
                         }
                     } else if (word.getCCG().equals(words.get(i - 1).getCCG())) {
                         // backward application
                         types.add(Type.BACKWARD);
-                        word.application();
+                        word.application(words.get(i - 1).getUniversalDependency());
                         i--;
                     }
                     if (startI == i) {
                         break;
                     }
                 } else {
-                    throw new WrongCCGException();
+                    break;
                 }
             }
         }
         return new Pair<>(new Pair<>(i, j), word);
     }
 
-    private static boolean condition(ArrayList<CCGWord> words, int sentenceCount) {
-        int count = 0;
-        for (CCGWord word : words) {
-            if (word.size() == 1 && word.getCCG().equals("S")) {
-                count++;
-            } else {
-                return true;
-            }
-        }
-        return count != sentenceCount;
-    }
-
-    private static int sentenceCount(AnnotatedSentence sentence) {
-        int count = 1;
+    private static ArrayList<AnnotatedSentence> splitSentence(AnnotatedSentence sentence) {
+        ArrayList<AnnotatedSentence> sentences = new ArrayList<>();
+        ArrayList<AnnotatedWord> words = new ArrayList<>();
         for (int i = 0; i < sentence.wordCount(); i++) {
             AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
-            if (word.getUniversalDependency().toString().equals("PARATAXIS")) {
-                count++;
+            if (!word.isPunctuation()) {
+                words.add(word);
             }
         }
-        return count;
+        DisjointSet<AnnotatedWord> set = new DisjointSet<>(words);
+        for (AnnotatedWord word : words) {
+            if (!word.getUniversalDependency().toString().equals("PARATAXIS") && !word.getUniversalDependency().toString().equals("ROOT")) {
+                set.union(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1));
+            }
+        }
+        sentences.add(new AnnotatedSentence());
+        sentences.get(0).addWord(words.get(0));
+        for (int i = 1; i < words.size(); i++) {
+            if (set.findSet(words.get(i - 1)) != set.findSet(words.get(i))) {
+                sentences.add(new AnnotatedSentence());
+            }
+            sentences.get(sentences.size() - 1).addWord(words.get(i));
+        }
+        return sentences;
     }
 
-    private static void printLastCCGs(ArrayList<CCGWord> words) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < words.size(); i++) {
-            sb.append(words.get(i).getCCG());
-            if (i + 1 != words.size()) {
-                sb.append(",");
+    private static int extraPosition(ArrayList<CCGWord> words) {
+        for (int i = 1; i < words.size(); i++) {
+            CCGWord word = words.get(i);
+            if (word.getUniversalDependency().endsWith("SUBJ") || word.getUniversalDependency().endsWith("OBJ") || word.getUniversalDependency().endsWith("COMP") || word.getUniversalDependency().equals("OBL")) {
+                String newCCG = "S\\(S\\" + word + ")";
+                CCGWord newWord = new CCGWord(newCCG, word.getUniversalDependency());
+                if (words.get(i - 1).size() > 1) {
+                    if (newWord.getCCG().equals(words.get(i - 1).getFirstCCG())) {
+                        word.splitCCG(newCCG);
+                        return i;
+                    }
+                    if (newWord.getCCG().equals(words.get(i - 1).toString())) {
+                        word.splitCCG(newCCG);
+                        return i;
+                    }
+                } else {
+                    if (newWord.getCCG().equals(words.get(i - 1).getCCG())) {
+                        word.splitCCG(newCCG);
+                        return i;
+                    }
+                }
             }
         }
-        System.out.println(sb);
+        return -1;
     }
 
     public static ArrayList<Type> generate(AnnotatedSentence sentence) throws WrongCCGException {
         ArrayList<Type> types = new ArrayList<>();
-        ArrayList<CCGWord> words = constructCCGWord(sentence);
-        int sentenceCount = sentenceCount(sentence);
-        while (condition(words, sentenceCount)) {
-            int startIndex = findIndex(words);
-            if (startIndex == -1) {
-                if (condition(words, sentenceCount)) {
-                    throw new WrongCCGException();
+        ArrayList<AnnotatedSentence> sentences = splitSentence(sentence);
+        StringBuilder sb = new StringBuilder();
+        for (AnnotatedSentence annotatedSentence : sentences) {
+            ArrayList<CCGWord> words = constructCCGWord(annotatedSentence);
+            while (words.size() > 1) {
+                int startIndex = findIndex(words);
+                if (startIndex == -1) {
+                    startIndex = extraPosition(words);
+                    if (startIndex == -1) {
+                        if (words.size() > 1 || !words.get(0).getCCG().equals("S")) {
+                            throw new WrongCCGException();
+                        }
+                        break;
+                    }
                 }
-                // last CCGs
-                printLastCCGs(words);
-                return types;
+                Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, startIndex, types);
+                deleteWords(p, words);
             }
-            Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, startIndex, types);
-            deleteWords(p, words);
+            // last CCGs
+            if (words.get(0).getCCG().equals("S")) {
+                sb.append(words.get(0).getCCG()).append(" ");
+            } else {
+                throw new WrongCCGException();
+            }
         }
-        // last CCGs
-        printLastCCGs(words);
+        System.out.println(sb);
         return types;
     }
 }

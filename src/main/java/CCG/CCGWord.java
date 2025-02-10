@@ -6,10 +6,12 @@ public class CCGWord {
 
     private final LinkedList<String> ccg;
     private final LinkedList<Type> types;
+    private String universalDependency;
 
-    public CCGWord(String word) {
+    public CCGWord(String word, String universalDependency) {
         this.ccg = new LinkedList<>();
         this.types = new LinkedList<>();
+        this.universalDependency = universalDependency;
         splitCCG(word);
         if (ccg.size() == 1) {
             String ccg = this.ccg.getFirst();
@@ -19,7 +21,11 @@ public class CCGWord {
         }
     }
 
-    private void splitCCG(String word) {
+    public String getUniversalDependency() {
+        return universalDependency;
+    }
+
+    protected void splitCCG(String word) {
         this.ccg.clear();
         this.types.clear();
         int open = 0;
@@ -83,15 +89,17 @@ public class CCGWord {
         boolean isCrossed = !this.types.getLast().equals(next.types.getFirst());
         ccg.removeLast();
         types.removeLast();
+        this.universalDependency = next.universalDependency;
         next.removeFirstCCG();
         add(next);
         return isCrossed;
     }
 
     // forward and backward application
-    public void application() {
+    public void application(String universalDependency) {
         ccg.removeLast();
         types.removeLast();
+        this.universalDependency = universalDependency;
         if (ccg.size() == 1) {
             String ccg = getCCG();
             if (ccg.charAt(0) == '(') {
@@ -105,6 +113,9 @@ public class CCGWord {
     }
 
     public String toString() {
+        if (ccg.size() == 1) {
+            return ccg.getFirst();
+        }
         StringBuilder sb = new StringBuilder();
         sb.append("(");
         for (int i = 0; i < ccg.size(); i++) {
