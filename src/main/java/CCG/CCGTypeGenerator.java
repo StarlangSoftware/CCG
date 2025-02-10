@@ -161,6 +161,17 @@ public class CCGTypeGenerator {
         return count;
     }
 
+    private static void printLastCCGs(ArrayList<CCGWord> words) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < words.size(); i++) {
+            sb.append(words.get(i).getCCG());
+            if (i + 1 != words.size()) {
+                sb.append(",");
+            }
+        }
+        System.out.println(sb);
+    }
+
     public static ArrayList<Type> generate(AnnotatedSentence sentence) throws WrongCCGException {
         ArrayList<Type> types = new ArrayList<>();
         ArrayList<CCGWord> words = constructCCGWord(sentence);
@@ -172,28 +183,14 @@ public class CCGTypeGenerator {
                     throw new WrongCCGException();
                 }
                 // last CCGs
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < words.size(); i++) {
-                    sb.append(words.get(i).getCCG());
-                    if (i + 1 != words.size()) {
-                        sb.append(",");
-                    }
-                }
-                System.out.println(sb);
+                printLastCCGs(words);
                 return types;
             }
             Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, startIndex, types);
             deleteWords(p, words);
         }
         // last CCGs
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < words.size(); i++) {
-            sb.append(words.get(i).getCCG());
-            if (i + 1 != words.size()) {
-                sb.append(",");
-            }
-        }
-        System.out.println(sb);
+        printLastCCGs(words);
         return types;
     }
 }
