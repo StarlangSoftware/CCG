@@ -12,7 +12,10 @@ public class CCGWordPair {
         this.word = word;
         this.toWord = toWord;
         this.no = no;
+    }
 
+    public int no() {
+        return no;
     }
 
     public AnnotatedWord getWord() {

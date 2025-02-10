@@ -6,7 +6,7 @@ import java.util.*;
 
 public class CCGGenerator {
 
-    private static ArrayList<CCGWordPair> setWords(AnnotatedSentence sentence) {
+    private static ArrayList<CCGWordPair> setWords(AnnotatedSentence sentence, ArrayList<HashMap<Integer, Integer>> mapList) {
         HashMap<Integer, Integer> map = new HashMap<>();
         ArrayList<CCGWordPair> words = new ArrayList<>();
         for (int i = 0; i < sentence.wordCount(); i++) {
@@ -24,6 +24,7 @@ public class CCGGenerator {
                 }
                 words.add(ccgWordPair);
             }
+            mapList.add((HashMap<Integer, Integer>) map.clone());
         }
         setRoots(map, sentence);
         return words;
@@ -52,7 +53,14 @@ public class CCGGenerator {
         }
     }
 
-    private static ArrayList<CCGWordPair> setSentence(ArrayList<CCGWordPair> sentence) {
+    private static String removeNPs(int count, String ccg) {
+        if (count == 0) {
+            return ccg;
+        }
+        return removeNPs(count - 1, ccg.substring(1, ccg.length() - 4));
+    }
+
+    private static ArrayList<CCGWordPair> setSentence(ArrayList<CCGWordPair> sentence, ArrayList<HashMap<Integer, Integer>> mapList) {
         ArrayList<CCGWordPair> words = new ArrayList<>();
         for (CCGWordPair ccgWordPair : sentence) {
             switch (ccgWordPair.getUniversalDependency()) {
@@ -103,7 +111,12 @@ public class CCGGenerator {
                 case "NMOD":
                 case "NUMMOD":
                     if (ccgWordPair.getToCcg() != null) {
-                        ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg() + ")");
+                        if (mapList.get(ccgWordPair.no()).containsKey(ccgWordPair.to() - 1)) {
+                            String toCCG = removeNPs(Math.abs(mapList.get(ccgWordPair.to() - 1).getOrDefault(ccgWordPair.to() - 1, 0) - mapList.get(ccgWordPair.no()).get(ccgWordPair.to() - 1)), ccgWordPair.getToCcg());
+                            ccgWordPair.setCcg("(" + toCCG + "/" + toCCG + ")");
+                        } else {
+                            ccgWordPair.setCcg("(" + ccgWordPair.getToCcg() + "/" + ccgWordPair.getToCcg() + ")");
+                        }
                     } else {
                         if (ccgWordPair.getCcg() == null) {
                             words.add(ccgWordPair);
@@ -162,10 +175,11 @@ public class CCGGenerator {
         for (int i = 0; i < sentence.getWords().size(); i++) {
             ((AnnotatedWord) sentence.getWord(i)).setCcg(null);
         }
-        ArrayList<CCGWordPair> words = setWords(sentence);
+        ArrayList<HashMap<Integer, Integer>> mapList = new ArrayList<>();
+        ArrayList<CCGWordPair> words = setWords(sentence, mapList);
         int lastSize = words.size();
         do {
-            words = setSentence(words);
+            words = setSentence(words, mapList);
             if (lastSize == words.size()) {
                 System.out.println(sentence.getFileName() + " not done.");
                 break;
