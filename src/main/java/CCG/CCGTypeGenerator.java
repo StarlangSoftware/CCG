@@ -116,13 +116,21 @@ public class CCGTypeGenerator {
                             i--;
                         } else if (word.getCCG().equals(words.get(i - 1).toString())) {
                             // backward application
-                            types.add(Type.BACKWARD);
+                            if (words.get(i - 1).getUniversalDependency().endsWith("SUBJ")) {
+                                types.add(Type.TYPE_RAISING_FORWARD);
+                            } else {
+                                types.add(Type.BACKWARD);
+                            }
                             word.application(words.get(i - 1).getUniversalDependency());
                             i--;
                         }
                     } else if (word.getCCG().equals(words.get(i - 1).getCCG())) {
                         // backward application
-                        types.add(Type.BACKWARD);
+                        if (words.get(i - 1).getUniversalDependency().endsWith("SUBJ")) {
+                            types.add(Type.TYPE_RAISING_FORWARD);
+                        } else {
+                            types.add(Type.BACKWARD);
+                        }
                         word.application(words.get(i - 1).getUniversalDependency());
                         i--;
                     }
