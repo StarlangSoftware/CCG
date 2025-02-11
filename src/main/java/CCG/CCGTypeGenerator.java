@@ -163,26 +163,24 @@ public class CCGTypeGenerator {
 
     private static ArrayList<AnnotatedSentence> splitSentence(AnnotatedSentence sentence) {
         ArrayList<AnnotatedSentence> sentences = new ArrayList<>();
-        ArrayList<AnnotatedWord> words = new ArrayList<>();
+        ArrayList<Pair<AnnotatedWord, Integer>> words = new ArrayList<>();
         for (int i = 0; i < sentence.wordCount(); i++) {
             AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
-            if (!word.isPunctuation()) {
-                words.add(word);
-            }
+            words.add(new Pair<>(word, i));
         }
-        DisjointSet<AnnotatedWord> set = new DisjointSet<>(words);
-        for (AnnotatedWord word : words) {
-            if (!word.getUniversalDependency().toString().equals("PARATAXIS") && !word.getUniversalDependency().toString().equals("ROOT")) {
-                set.union(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1));
+        DisjointSet<Pair<AnnotatedWord, Integer>> set = new DisjointSet<>(words);
+        for (Pair<AnnotatedWord, Integer> pair : words) {
+            if (!pair.getKey().getUniversalDependency().toString().equals("PARATAXIS") && !pair.getKey().getUniversalDependency().toString().equals("ROOT")) {
+                set.union(pair, words.get(pair.getKey().getUniversalDependency().to() - 1));
             }
         }
         sentences.add(new AnnotatedSentence());
-        sentences.get(0).addWord(words.get(0));
+        sentences.get(0).addWord(words.get(0).getKey());
         for (int i = 1; i < words.size(); i++) {
             if (set.findSet(words.get(i - 1)) != set.findSet(words.get(i))) {
                 sentences.add(new AnnotatedSentence());
             }
-            sentences.get(sentences.size() - 1).addWord(words.get(i));
+            sentences.get(sentences.size() - 1).addWord(words.get(i).getKey());
         }
         return sentences;
     }
