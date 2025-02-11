@@ -68,7 +68,7 @@ public class CCGTypeGenerator {
         return -1;
     }
 
-    private static Pair<Pair<Integer, Integer>, CCGWord> generateCCGTypes(ArrayList<CCGWord> words, int start, ArrayList<Type> types) throws WrongCCGException {
+    private static Pair<Pair<Integer, Integer>, CCGWord> generateCCGTypes(ArrayList<CCGWord> words, int start, ArrayList<Type> types, boolean isExtraPosition) throws WrongCCGException {
         int i = start, j = start;
         CCGWord word = words.get(start);
         while (word.size() > 1) {
@@ -109,27 +109,43 @@ public class CCGTypeGenerator {
                         if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
                             // backward composition
                             if (word.composition(words.get(i - 1))) {
-                                types.add(Type.BACKWARD_CROSSED_COMPOSITION);
+                                if (isExtraPosition) {
+                                    types.add(Type.EXTRA_POSITION_BACKWARD_CROSSED_COMPOSITION);
+                                } else {
+                                    types.add(Type.BACKWARD_CROSSED_COMPOSITION);
+                                }
                             } else {
-                                types.add(Type.BACKWARD_COMPOSITION);
+                                if (isExtraPosition) {
+                                    types.add(Type.EXTRA_POSITION_BACKWARD_COMPOSITION);
+                                } else {
+                                    types.add(Type.BACKWARD_COMPOSITION);
+                                }
                             }
                             i--;
                         } else if (word.getCCG().equals(words.get(i - 1).toString())) {
                             // backward application
-                            if (words.get(i - 1).getUniversalDependency().endsWith("SUBJ")) {
-                                types.add(Type.TYPE_RAISING_FORWARD);
+                            if (isExtraPosition) {
+                                types.add(Type.EXTRA_POSITION_BACKWARD);
                             } else {
-                                types.add(Type.BACKWARD);
+                                if (words.get(i - 1).getUniversalDependency().endsWith("SUBJ")) {
+                                    types.add(Type.TYPE_RAISING_FORWARD);
+                                } else {
+                                    types.add(Type.BACKWARD);
+                                }
                             }
                             word.application(words.get(i - 1).getUniversalDependency());
                             i--;
                         }
                     } else if (word.getCCG().equals(words.get(i - 1).getCCG())) {
                         // backward application
-                        if (words.get(i - 1).getUniversalDependency().endsWith("SUBJ")) {
-                            types.add(Type.TYPE_RAISING_FORWARD);
+                        if (isExtraPosition) {
+                            types.add(Type.EXTRA_POSITION_BACKWARD);
                         } else {
-                            types.add(Type.BACKWARD);
+                            if (words.get(i - 1).getUniversalDependency().endsWith("SUBJ")) {
+                                types.add(Type.TYPE_RAISING_FORWARD);
+                            } else {
+                                types.add(Type.BACKWARD);
+                            }
                         }
                         word.application(words.get(i - 1).getUniversalDependency());
                         i--;
@@ -202,6 +218,7 @@ public class CCGTypeGenerator {
         ArrayList<AnnotatedSentence> sentences = splitSentence(sentence);
         StringBuilder sb = new StringBuilder();
         for (AnnotatedSentence annotatedSentence : sentences) {
+            boolean isExtraPosition = false;
             ArrayList<CCGWord> words = constructCCGWord(annotatedSentence);
             while (words.size() > 1) {
                 int startIndex = findIndex(words);
@@ -213,8 +230,9 @@ public class CCGTypeGenerator {
                         }
                         break;
                     }
+                    isExtraPosition = true;
                 }
-                Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, startIndex, types);
+                Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, startIndex, types, isExtraPosition);
                 deleteWords(p, words);
             }
             // last CCGs
