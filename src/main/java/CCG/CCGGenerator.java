@@ -14,7 +14,7 @@ public class CCGGenerator {
             if (word.getUniversalDependency().to() != 0 && !word.getUniversalDependency().toString().equals("PARATAXIS")) {
                 CCGWordPair ccgWordPair = new CCGWordPair(word, (AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1), i);
                 int toIndex = word.getUniversalDependency().to() - 1;
-                if (ccgWordPair.isToRoot() || ccgWordPair.getToUniversalDependency().equals("PARATAXIS")) {
+                if (ccgWordPair.isToRoot() || ccgWordPair.getToUniversalDependency().equals("PARATAXIS") || ccgWordPair.getToUniversalDependency().endsWith("COMP")) {
                     if (!map.containsKey(toIndex)) {
                         map.put(toIndex, 0);
                     }
@@ -23,6 +23,10 @@ public class CCGGenerator {
                     }
                 }
                 words.add(ccgWordPair);
+            } else {
+                if (!map.containsKey(i)) {
+                    map.put(i, 0);
+                }
             }
             mapList.add((HashMap<Integer, Integer>) map.clone());
         }
@@ -49,7 +53,12 @@ public class CCGGenerator {
 
     private static void setRoots(HashMap<Integer, Integer> map, AnnotatedSentence sentence) {
         for (Integer key : map.keySet()) {
-            ((AnnotatedWord) sentence.getWord(key)).setCcg(setRoot(map.get(key), "S"));
+            AnnotatedWord word = ((AnnotatedWord) sentence.getWord(key));
+            if (word.getUniversalDependency().toString().endsWith("COMP")) {
+                word.setCcg(setRoot(map.get(key), "NP"));
+            } else {
+                word.setCcg(setRoot(map.get(key), "S"));
+            }
         }
     }
 
@@ -68,10 +77,14 @@ public class CCGGenerator {
                 case "CSUBJ":
                 case "OBL":
                 case "OBJ":
-                case "CCOMP":
-                case "XCOMP":
                 case "IOBJ":
                     ccgWordPair.setCcg("NP");
+                    break;
+                case "XCOMP":
+                case "CCOMP":
+                    if (ccgWordPair.getCcg() == null) {
+                        ccgWordPair.setCcg("NP");
+                    }
                     break;
                 case "MARK":
                 case "DISCOURSE":
@@ -191,7 +204,7 @@ public class CCGGenerator {
                 AnnotatedWord word = ((AnnotatedWord) sentence.getWord(i));
                 if (word.getUniversalDependency().to() != 0) {
                     AnnotatedWord toWord = ((AnnotatedWord) sentence.getWord(word.getUniversalDependency().to() - 1));
-                    if ((!toWord.getUniversalDependency().toString().equals("PARATAXIS") && !toWord.getUniversalDependency().toString().equals("ROOT")) && (word.getUniversalDependency().toString().equals("IOBJ") || word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ") || word.getUniversalDependency().toString().endsWith("COMP"))) {
+                    if ((!toWord.getUniversalDependency().toString().endsWith("COMP") && !toWord.getUniversalDependency().toString().equals("PARATAXIS") && !toWord.getUniversalDependency().toString().equals("ROOT")) && (word.getUniversalDependency().toString().equals("IOBJ") || word.getUniversalDependency().toString().equals("OBJ") || word.getUniversalDependency().toString().equals("OBL") || word.getUniversalDependency().toString().contains("SUBJ") || word.getUniversalDependency().toString().endsWith("COMP"))) {
                         if (toWord.getCcg() == null) {
                             toWord.setCcg("(S\\NP)");
                         } else {
