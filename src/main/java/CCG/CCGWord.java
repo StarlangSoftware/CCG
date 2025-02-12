@@ -1,6 +1,6 @@
 package CCG;
 
-import java.util.LinkedList;
+import java.util.*;
 
 public class CCGWord {
 
@@ -19,6 +19,12 @@ public class CCGWord {
                 splitCCG(ccg.substring(1, ccg.length() - 1));
             }
         }
+    }
+
+    public CCGWord(LinkedList<String> ccg, LinkedList<Type> types, String universalDependency) {
+        this.ccg = ccg;
+        this.types = types;
+        this.universalDependency = universalDependency;
     }
 
     public String getUniversalDependency() {
@@ -130,5 +136,14 @@ public class CCGWord {
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    @Override
+    public CCGWord clone() {
+        return new CCGWord((LinkedList<String>) this.ccg.clone(), (LinkedList<Type>) this.types.clone(), this.universalDependency);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(ccg);
     }
 }

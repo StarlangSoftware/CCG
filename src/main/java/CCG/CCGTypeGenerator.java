@@ -4,7 +4,7 @@ import AnnotatedSentence.*;
 import Cookies.Set.DisjointSet;
 import Cookies.Tuple.Pair;
 
-import java.util.ArrayList;
+import java.util.*;
 
 public class CCGTypeGenerator {
 
@@ -26,7 +26,8 @@ public class CCGTypeGenerator {
         return words;
     }
 
-    private static int findIndex(ArrayList<CCGWord> words) throws WrongCCGException {
+    private static ArrayList<Pair<Integer, String>> findIndex(ArrayList<CCGWord> words) throws WrongCCGException {
+        ArrayList<Pair<Integer, String>> indexes = new ArrayList<>();
         for (int i = 0; i < words.size(); i++) {
             CCGWord word = words.get(i);
             if (word.size() > 1) {
@@ -34,14 +35,14 @@ public class CCGTypeGenerator {
                     if (i + 1 < words.size()) {
                         if (words.get(i + 1).size() > 1) {
                             if (word.getCCG().equals(words.get(i + 1).getFirstCCG())) {
-                                return i;
+                                indexes.add(new Pair<>(i, null));
                             }
                             if (word.getCCG().equals(words.get(i + 1).toString())) {
-                                return i;
+                                indexes.add(new Pair<>(i, null));
                             }
                         } else {
                             if (word.getCCG().equals(words.get(i + 1).getCCG())) {
-                                return i;
+                                indexes.add(new Pair<>(i, null));
                             }
                         }
                     } else {
@@ -51,21 +52,21 @@ public class CCGTypeGenerator {
                     if (i - 1 >= 0) {
                         if (words.get(i - 1).size() > 1) {
                             if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
-                                return i;
+                                indexes.add(new Pair<>(i, null));
                             }
                             if (word.getCCG().equals(words.get(i - 1).toString())) {
-                                return i;
+                                indexes.add(new Pair<>(i, null));
                             }
                         } else {
                             if (word.getCCG().equals(words.get(i - 1).getCCG())) {
-                                return i;
+                                indexes.add(new Pair<>(i, null));
                             }
                         }
                     }
                 }
             }
         }
-        return -1;
+        return indexes;
     }
 
     private static Pair<Pair<Integer, Integer>, CCGWord> generateCCGTypes(ArrayList<CCGWord> words, int start, ArrayList<Type> types, boolean isExtraPosition) throws WrongCCGException {
@@ -185,7 +186,8 @@ public class CCGTypeGenerator {
         return sentences;
     }
 
-    private static int extraPosition(ArrayList<CCGWord> words) {
+    private static ArrayList<Pair<Integer, String>> extraPosition(ArrayList<CCGWord> words) {
+        ArrayList<Pair<Integer, String>> positions = new ArrayList<>();
         for (int i = 1; i < words.size(); i++) {
             CCGWord word = words.get(i);
             if (word.getUniversalDependency().endsWith("SUBJ") || word.getUniversalDependency().endsWith("OBJ") || word.getUniversalDependency().endsWith("COMP") || word.getUniversalDependency().equals("OBL")) {
@@ -193,54 +195,82 @@ public class CCGTypeGenerator {
                 CCGWord newWord = new CCGWord(newCCG, word.getUniversalDependency());
                 if (words.get(i - 1).size() > 1) {
                     if (newWord.getCCG().equals(words.get(i - 1).getFirstCCG())) {
-                        word.splitCCG(newCCG);
-                        return i;
+                        positions.add(new Pair<>(i, newCCG));
                     }
                     if (newWord.getCCG().equals(words.get(i - 1).toString())) {
-                        word.splitCCG(newCCG);
-                        return i;
+                        positions.add(new Pair<>(i, newCCG));
                     }
                 } else {
                     if (newWord.getCCG().equals(words.get(i - 1).getCCG())) {
-                        word.splitCCG(newCCG);
-                        return i;
+                        positions.add(new Pair<>(i, newCCG));
                     }
                 }
             }
         }
-        return -1;
+        return positions;
+    }
+
+    private static Pair<ArrayList<Pair<Integer, String>>, Boolean> constructCandidates(ArrayList<CCGWord> words) throws WrongCCGException {
+        ArrayList<Pair<Integer, String>> candidates = new ArrayList<>(findIndex(words));
+        if (candidates.isEmpty()) {
+            candidates.addAll(extraPosition(words));
+            return new Pair<>(candidates, true);
+        }
+        return new Pair<>(candidates, false);
+    }
+
+    private static ArrayList<Type> backtrack(ArrayList<CCGWord> words, ArrayList<Type> types, HashSet<String> visited) throws WrongCCGException {
+        if (visited.contains(words.toString())) {
+            return null;
+        }
+        visited.add(words.toString());
+        if (words.size() == 1 && words.get(0).getCCG().equals("S")) {
+            System.out.println("S");
+            return types;
+        } else {
+            Pair<ArrayList<Pair<Integer, String>>, Boolean> pair = constructCandidates(words);
+            for (int i = 0; i < pair.getKey().size(); i++) {
+                Pair<Integer, String> current = pair.getKey().get(i);
+                ArrayList<CCGWord> cloneWords = new ArrayList<>();
+                for (CCGWord word : words) {
+                    cloneWords.add(word.clone());
+                }
+                ArrayList<Type> typesClone = (ArrayList<Type>) types.clone();
+                if (current.getValue() != null) {
+                    words.get(current.getKey()).splitCCG(current.getValue());
+                }
+                Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, current.getKey(), types, pair.getValue());
+                deleteWords(p, words);
+                ArrayList<Type> backtrack = backtrack(words, types, visited);
+                if (backtrack != null) {
+                    return backtrack;
+                }
+                words = cloneWords;
+                types = typesClone;
+            }
+        }
+        return null;
     }
 
     public static ArrayList<Type> generate(AnnotatedSentence sentence) throws WrongCCGException {
+        for (int i = 0; i < sentence.wordCount(); i++) {
+            AnnotatedWord word = (AnnotatedWord) sentence.getWord(i);
+            if (word.getCcg() == null) {
+                System.out.println(sentence.getFileName() + " Null CCG");
+                throw new WrongCCGException();
+            }
+        }
         ArrayList<Type> types = new ArrayList<>();
         ArrayList<AnnotatedSentence> sentences = splitSentence(sentence);
-        StringBuilder sb = new StringBuilder();
         for (AnnotatedSentence annotatedSentence : sentences) {
-            boolean isExtraPosition = false;
             ArrayList<CCGWord> words = constructCCGWord(annotatedSentence);
-            while (words.size() > 1) {
-                int startIndex = findIndex(words);
-                if (startIndex == -1) {
-                    startIndex = extraPosition(words);
-                    if (startIndex == -1) {
-                        if (words.size() > 1 || !words.get(0).getCCG().equals("S")) {
-                            throw new WrongCCGException();
-                        }
-                        break;
-                    }
-                    isExtraPosition = true;
-                }
-                Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, startIndex, types, isExtraPosition);
-                deleteWords(p, words);
-            }
-            // last CCGs
-            if (words.get(0).getCCG().equals("S")) {
-                sb.append(words.get(0).getCCG()).append(" ");
+            ArrayList<Type> currentTypes = backtrack(words, new ArrayList<>(), new HashSet<>());
+            if (currentTypes != null) {
+                types.addAll(currentTypes);
             } else {
                 throw new WrongCCGException();
             }
         }
-        System.out.println(sb);
         return types;
     }
 }
