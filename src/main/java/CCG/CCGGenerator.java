@@ -116,6 +116,7 @@ public class CCGGenerator {
                 case "ADVCL":
                 case "ADVMOD":
                 case "COMPOUND":
+                case "CLF":
                 case "REPARANDUM":
                 case "CC":
                 case "DET":
