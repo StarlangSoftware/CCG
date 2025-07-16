@@ -7,6 +7,11 @@ import java.util.*;
 
 public class RandomCCGTypeGenerator extends CCGTypeGenerator {
 
+    /**
+     * Finds all possibilities for the current state.
+     * @param words current words.
+     * @return all possible word indexes that can merge.
+     */
     private static ArrayList<Pair<Integer, String>> findIndex(ArrayList<CCGWord> words) throws WrongCCGException {
         ArrayList<Pair<Integer, String>> indexes = new ArrayList<>();
         for (int i = 0; i < words.size(); i++) {
@@ -15,10 +20,12 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                 if (word.getType().equals(Type.FORWARD)) {
                     if (i + 1 < words.size()) {
                         if (words.get(i + 1).size() > 1) {
+                            // checks for forward composition and forward
                             if (word.getCCG().equals(words.get(i + 1).getFirstCCG()) || word.getCCG().equals(words.get(i + 1).toString())) {
                                 indexes.add(new Pair<>(i, null));
                             }
                         } else {
+                            // checks for forward
                             if (word.getCCG().equals(words.get(i + 1).getCCG())) {
                                 indexes.add(new Pair<>(i, null));
                             }
@@ -29,10 +36,12 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                 } else {
                     if (i - 1 >= 0) {
                         if (words.get(i - 1).size() > 1) {
+                            // checks for backward composition and backward
                             if (word.getCCG().equals(words.get(i - 1).getFirstCCG()) || word.getCCG().equals(words.get(i - 1).toString())) {
                                 indexes.add(new Pair<>(i, null));
                             }
                         } else {
+                            // checks for backward
                             if (word.getCCG().equals(words.get(i - 1).getCCG())) {
                                 indexes.add(new Pair<>(i, null));
                             }
@@ -44,6 +53,14 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
         return indexes;
     }
 
+    /**
+     *  merges two {@link CCGWord}s.
+     * @param words current words.
+     * @param i index of the {@link CCGWord}.
+     * @param types for current possibility.
+     * @param isExtraPosition is the current merge done with extraposition.
+     * @return the index of the word to be deleted.
+     */
     private static int generateCCGTypes(ArrayList<CCGWord> words, int i, ArrayList<Type> types, boolean isExtraPosition) {
         CCGWord word = words.get(i);
         int removeIndex = i;
@@ -121,9 +138,14 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                 return removeIndex;
             }
         }
-        return removeIndex;
+        return -1;
     }
 
+    /**
+     * Finds all possibilities for the current state with extrapositions.
+     * @param words current words.
+     * @return all possible word indexes that can merge and updates extrapositioned {@link CCGWord}s.
+     */
     private static ArrayList<Pair<Integer, String>> extraPosition(ArrayList<CCGWord> words) {
         ArrayList<Pair<Integer, String>> positions = new ArrayList<>();
         for (int i = 1; i < words.size(); i++) {
@@ -148,6 +170,11 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
         return positions;
     }
 
+    /**
+     *  constructs all the candidates that can merge.
+     * @param words current words.
+     * @return {@link ArrayList} of candidates.
+     */
     private static Pair<ArrayList<Pair<Integer, String>>, Boolean> constructCandidates(ArrayList<CCGWord> words) throws WrongCCGException {
         ArrayList<Pair<Integer, String>> candidates = new ArrayList<>(findIndex(words));
         if (candidates.isEmpty()) {
@@ -157,6 +184,13 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
         return new Pair<>(candidates, false);
     }
 
+    /**
+     *  backtracks all the possibilities and finds {@link Type}s.
+     * @param words current words for a possibility.
+     * @param types current types for a possibility.
+     * @param visited all visited states for all the possibilities.
+     * @return {@link ArrayList} of {@link Type}s.
+     */
     private static ArrayList<Type> backtrack(ArrayList<CCGWord> words, ArrayList<Type> types, HashSet<String> visited) throws WrongCCGException {
         if (visited.contains(words.toString())) {
             return null;
@@ -190,11 +224,17 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
         return null;
     }
 
+    /**
+     *  generates valid {@link Type}s for an {@link AnnotatedSentence}.
+     * @param sentence an {@link AnnotatedSentence}.
+     * @return {@link ArrayList} of {@link Type}s.
+     */
     public static ArrayList<Type> generate(AnnotatedSentence sentence) throws WrongCCGException {
         if (checkCCGs(sentence)) {
             throw new WrongCCGException();
         }
         ArrayList<Type> types = new ArrayList<>();
+        // splits sentence to a sub sentence list
         ArrayList<AnnotatedSentence> sentences = splitSentence(sentence);
         for (AnnotatedSentence annotatedSentence : sentences) {
             ArrayList<CCGWord> words = constructCCGWord(annotatedSentence);
