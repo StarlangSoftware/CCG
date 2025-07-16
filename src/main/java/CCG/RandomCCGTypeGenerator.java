@@ -15,7 +15,9 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                 if (word.getType().equals(Type.FORWARD)) {
                     if (i + 1 < words.size()) {
                         if (words.get(i + 1).size() > 1) {
-                            indexes.add(new Pair<>(i, null));
+                            if (word.getCCG().equals(words.get(i + 1).getFirstCCG()) || word.getCCG().equals(words.get(i + 1).toString())) {
+                                indexes.add(new Pair<>(i, null));
+                            }
                         } else {
                             if (word.getCCG().equals(words.get(i + 1).getCCG())) {
                                 indexes.add(new Pair<>(i, null));
@@ -27,7 +29,9 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                 } else {
                     if (i - 1 >= 0) {
                         if (words.get(i - 1).size() > 1) {
-                            indexes.add(new Pair<>(i, null));
+                            if (word.getCCG().equals(words.get(i - 1).getFirstCCG()) || word.getCCG().equals(words.get(i - 1).toString())) {
+                                indexes.add(new Pair<>(i, null));
+                            }
                         } else {
                             if (word.getCCG().equals(words.get(i - 1).getCCG())) {
                                 indexes.add(new Pair<>(i, null));
@@ -159,7 +163,7 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
         }
         visited.add(words.toString());
         if (words.size() == 1 && words.get(0).getCCG().equals("S")) {
-            System.out.println("S");
+            //System.out.println("S");
             return types;
         } else {
             Pair<ArrayList<Pair<Integer, String>>, Boolean> pair = constructCandidates(words);
