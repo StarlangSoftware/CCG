@@ -15,11 +15,7 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                 if (word.getType().equals(Type.FORWARD)) {
                     if (i + 1 < words.size()) {
                         if (words.get(i + 1).size() > 1) {
-                            if (word.getCCG().equals(words.get(i + 1).getFirstCCG())) {
-                                indexes.add(new Pair<>(i, null));
-                            } else if (word.getCCG().equals(words.get(i + 1).toString())) {
-                                indexes.add(new Pair<>(i, null));
-                            }
+                            indexes.add(new Pair<>(i, null));
                         } else {
                             if (word.getCCG().equals(words.get(i + 1).getCCG())) {
                                 indexes.add(new Pair<>(i, null));
@@ -31,11 +27,7 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                 } else {
                     if (i - 1 >= 0) {
                         if (words.get(i - 1).size() > 1) {
-                            if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
-                                indexes.add(new Pair<>(i, null));
-                            } else if (word.getCCG().equals(words.get(i - 1).toString())) {
-                                indexes.add(new Pair<>(i, null));
-                            }
+                            indexes.add(new Pair<>(i, null));
                         } else {
                             if (word.getCCG().equals(words.get(i - 1).getCCG())) {
                                 indexes.add(new Pair<>(i, null));
@@ -56,62 +48,47 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
         } else {
             removeIndex--;
         }
-        while (word.size() > 1) {
-            if (removeIndex > i) {
-                if (words.get(i + 1).size() > 1) {
-                    if (word.getCCG().equals(words.get(i + 1).getFirstCCG())) {
-                        // forward composition
-                        if (word.composition(words.get(i + 1))) {
-                            types.add(Type.FORWARD_CROSSED_COMPOSITION);
-                        } else {
-                            types.add(Type.FORWARD_COMPOSITION);
-                        }
-                        return removeIndex;
-                    } else if (word.getCCG().equals(words.get(i + 1).toString())) {
-                        // forward application
-                        types.add(Type.FORWARD);
-                        word.application(words.get(i + 1).getUniversalDependency());
-                        return removeIndex;
+        if (removeIndex > i) {
+            if (words.get(i + 1).size() > 1) {
+                if (word.getCCG().equals(words.get(i + 1).getFirstCCG())) {
+                    // forward composition
+                    if (word.composition(words.get(i + 1))) {
+                        types.add(Type.FORWARD_CROSSED_COMPOSITION);
+                    } else {
+                        types.add(Type.FORWARD_COMPOSITION);
                     }
-                } else if (word.getCCG().equals(words.get(i + 1).getCCG())) {
+                    return removeIndex;
+                } else if (word.getCCG().equals(words.get(i + 1).toString())) {
                     // forward application
                     types.add(Type.FORWARD);
                     word.application(words.get(i + 1).getUniversalDependency());
                     return removeIndex;
                 }
-            } else {
-                if (words.get(i - 1).size() > 1) {
-                    if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
-                        // backward composition
-                        if (word.composition(words.get(i - 1))) {
-                            if (isExtraPosition) {
-                                types.add(Type.EXTRA_POSITION_BACKWARD_CROSSED_COMPOSITION);
-                            } else {
-                                types.add(Type.BACKWARD_CROSSED_COMPOSITION);
-                            }
-                        } else {
-                            if (isExtraPosition) {
-                                types.add(Type.EXTRA_POSITION_BACKWARD_COMPOSITION);
-                            } else {
-                                types.add(Type.BACKWARD_COMPOSITION);
-                            }
-                        }
-                        return removeIndex;
-                    } else if (word.getCCG().equals(words.get(i - 1).toString())) {
-                        // backward application
+            } else if (word.getCCG().equals(words.get(i + 1).getCCG())) {
+                // forward application
+                types.add(Type.FORWARD);
+                word.application(words.get(i + 1).getUniversalDependency());
+                return removeIndex;
+            }
+        } else {
+            if (words.get(i - 1).size() > 1) {
+                if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
+                    // backward composition
+                    if (word.composition(words.get(i - 1))) {
                         if (isExtraPosition) {
-                            types.add(Type.EXTRA_POSITION_BACKWARD);
+                            types.add(Type.EXTRA_POSITION_BACKWARD_CROSSED_COMPOSITION);
                         } else {
-                            if (words.get(i - 1).getUniversalDependency().endsWith("SUBJ")) {
-                                types.add(Type.TYPE_RAISING_FORWARD);
-                            } else {
-                                types.add(Type.BACKWARD);
-                            }
+                            types.add(Type.BACKWARD_CROSSED_COMPOSITION);
                         }
-                        word.application(words.get(i - 1).getUniversalDependency());
-                        return removeIndex;
+                    } else {
+                        if (isExtraPosition) {
+                            types.add(Type.EXTRA_POSITION_BACKWARD_COMPOSITION);
+                        } else {
+                            types.add(Type.BACKWARD_COMPOSITION);
+                        }
                     }
-                } else if (word.getCCG().equals(words.get(i - 1).getCCG())) {
+                    return removeIndex;
+                } else if (word.getCCG().equals(words.get(i - 1).toString())) {
                     // backward application
                     if (isExtraPosition) {
                         types.add(Type.EXTRA_POSITION_BACKWARD);
@@ -125,6 +102,19 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                     word.application(words.get(i - 1).getUniversalDependency());
                     return removeIndex;
                 }
+            } else if (word.getCCG().equals(words.get(i - 1).getCCG())) {
+                // backward application
+                if (isExtraPosition) {
+                    types.add(Type.EXTRA_POSITION_BACKWARD);
+                } else {
+                    if (words.get(i - 1).getUniversalDependency().endsWith("SUBJ")) {
+                        types.add(Type.TYPE_RAISING_FORWARD);
+                    } else {
+                        types.add(Type.BACKWARD);
+                    }
+                }
+                word.application(words.get(i - 1).getUniversalDependency());
+                return removeIndex;
             }
         }
         return removeIndex;
