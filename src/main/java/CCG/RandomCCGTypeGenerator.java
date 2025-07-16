@@ -7,13 +7,6 @@ import java.util.*;
 
 public class RandomCCGTypeGenerator extends CCGTypeGenerator {
 
-    private static void deleteWords(Pair<Pair<Integer, Integer>, CCGWord> p, ArrayList<CCGWord> words) {
-        if (p.getKey().getValue() >= p.getKey().getKey()) {
-            words.subList(p.getKey().getKey(), p.getKey().getValue() + 1).clear();
-        }
-        words.add(p.getKey().getKey(), p.getValue());
-    }
-
     private static ArrayList<Pair<Integer, String>> findIndex(ArrayList<CCGWord> words) throws WrongCCGException {
         ArrayList<Pair<Integer, String>> indexes = new ArrayList<>();
         for (int i = 0; i < words.size(); i++) {
@@ -24,8 +17,7 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                         if (words.get(i + 1).size() > 1) {
                             if (word.getCCG().equals(words.get(i + 1).getFirstCCG())) {
                                 indexes.add(new Pair<>(i, null));
-                            }
-                            if (word.getCCG().equals(words.get(i + 1).toString())) {
+                            } else if (word.getCCG().equals(words.get(i + 1).toString())) {
                                 indexes.add(new Pair<>(i, null));
                             }
                         } else {
@@ -41,8 +33,7 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                         if (words.get(i - 1).size() > 1) {
                             if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
                                 indexes.add(new Pair<>(i, null));
-                            }
-                            if (word.getCCG().equals(words.get(i - 1).toString())) {
+                            } else if (word.getCCG().equals(words.get(i - 1).toString())) {
                                 indexes.add(new Pair<>(i, null));
                             }
                         } else {
@@ -57,75 +48,56 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
         return indexes;
     }
 
-    private static Pair<Pair<Integer, Integer>, CCGWord> generateCCGTypes(ArrayList<CCGWord> words, int start, ArrayList<Type> types, boolean isExtraPosition) throws WrongCCGException {
-        int i = start, j = start;
-        CCGWord word = words.get(start);
+    private static int generateCCGTypes(ArrayList<CCGWord> words, int i, ArrayList<Type> types, boolean isExtraPosition) {
+        CCGWord word = words.get(i);
+        int removeIndex = i;
+        if (word.getType().equals(Type.FORWARD)) {
+            removeIndex++;
+        } else {
+            removeIndex--;
+        }
         while (word.size() > 1) {
-            if (word.getType().equals(Type.FORWARD)) {
-                if (j + 1 < words.size()) {
-                    int startJ = j;
-                    if (words.get(j + 1).size() > 1) {
-                        if (word.getCCG().equals(words.get(j + 1).getFirstCCG())) {
-                            // forward composition
-                            if (word.composition(words.get(j + 1))) {
-                                types.add(Type.FORWARD_CROSSED_COMPOSITION);
-                            } else {
-                                types.add(Type.FORWARD_COMPOSITION);
-                            }
-                            j++;
-                        } else if (word.getCCG().equals(words.get(j + 1).toString())) {
-                            // forward application
-                            types.add(Type.FORWARD);
-                            word.application(words.get(j + 1).getUniversalDependency());
-                            j++;
+            if (removeIndex > i) {
+                if (words.get(i + 1).size() > 1) {
+                    if (word.getCCG().equals(words.get(i + 1).getFirstCCG())) {
+                        // forward composition
+                        if (word.composition(words.get(i + 1))) {
+                            types.add(Type.FORWARD_CROSSED_COMPOSITION);
+                        } else {
+                            types.add(Type.FORWARD_COMPOSITION);
                         }
-                    } else if (word.getCCG().equals(words.get(j + 1).getCCG())) {
+                        return removeIndex;
+                    } else if (word.getCCG().equals(words.get(i + 1).toString())) {
                         // forward application
                         types.add(Type.FORWARD);
-                        word.application(words.get(j + 1).getUniversalDependency());
-                        j++;
+                        word.application(words.get(i + 1).getUniversalDependency());
+                        return removeIndex;
                     }
-                    if (startJ == j) {
-                        break;
-                    }
-                } else {
-                    throw new WrongCCGException();
+                } else if (word.getCCG().equals(words.get(i + 1).getCCG())) {
+                    // forward application
+                    types.add(Type.FORWARD);
+                    word.application(words.get(i + 1).getUniversalDependency());
+                    return removeIndex;
                 }
             } else {
-                if (i - 1 >= 0) {
-                    int startI = i;
-                    if (words.get(i - 1).size() > 1) {
-                        if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
-                            // backward composition
-                            if (word.composition(words.get(i - 1))) {
-                                if (isExtraPosition) {
-                                    types.add(Type.EXTRA_POSITION_BACKWARD_CROSSED_COMPOSITION);
-                                } else {
-                                    types.add(Type.BACKWARD_CROSSED_COMPOSITION);
-                                }
-                            } else {
-                                if (isExtraPosition) {
-                                    types.add(Type.EXTRA_POSITION_BACKWARD_COMPOSITION);
-                                } else {
-                                    types.add(Type.BACKWARD_COMPOSITION);
-                                }
-                            }
-                            i--;
-                        } else if (word.getCCG().equals(words.get(i - 1).toString())) {
-                            // backward application
+                if (words.get(i - 1).size() > 1) {
+                    if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
+                        // backward composition
+                        if (word.composition(words.get(i - 1))) {
                             if (isExtraPosition) {
-                                types.add(Type.EXTRA_POSITION_BACKWARD);
+                                types.add(Type.EXTRA_POSITION_BACKWARD_CROSSED_COMPOSITION);
                             } else {
-                                if (words.get(i - 1).getUniversalDependency().endsWith("SUBJ")) {
-                                    types.add(Type.TYPE_RAISING_FORWARD);
-                                } else {
-                                    types.add(Type.BACKWARD);
-                                }
+                                types.add(Type.BACKWARD_CROSSED_COMPOSITION);
                             }
-                            word.application(words.get(i - 1).getUniversalDependency());
-                            i--;
+                        } else {
+                            if (isExtraPosition) {
+                                types.add(Type.EXTRA_POSITION_BACKWARD_COMPOSITION);
+                            } else {
+                                types.add(Type.BACKWARD_COMPOSITION);
+                            }
                         }
-                    } else if (word.getCCG().equals(words.get(i - 1).getCCG())) {
+                        return removeIndex;
+                    } else if (word.getCCG().equals(words.get(i - 1).toString())) {
                         // backward application
                         if (isExtraPosition) {
                             types.add(Type.EXTRA_POSITION_BACKWARD);
@@ -137,17 +109,25 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                             }
                         }
                         word.application(words.get(i - 1).getUniversalDependency());
-                        i--;
+                        return removeIndex;
                     }
-                    if (startI == i) {
-                        break;
+                } else if (word.getCCG().equals(words.get(i - 1).getCCG())) {
+                    // backward application
+                    if (isExtraPosition) {
+                        types.add(Type.EXTRA_POSITION_BACKWARD);
+                    } else {
+                        if (words.get(i - 1).getUniversalDependency().endsWith("SUBJ")) {
+                            types.add(Type.TYPE_RAISING_FORWARD);
+                        } else {
+                            types.add(Type.BACKWARD);
+                        }
                     }
-                } else {
-                    break;
+                    word.application(words.get(i - 1).getUniversalDependency());
+                    return removeIndex;
                 }
             }
         }
-        return new Pair<>(new Pair<>(i, j), word);
+        return removeIndex;
     }
 
     private static ArrayList<Pair<Integer, String>> extraPosition(ArrayList<CCGWord> words) {
@@ -203,8 +183,8 @@ public class RandomCCGTypeGenerator extends CCGTypeGenerator {
                 if (current.getValue() != null) {
                     words.get(current.getKey()).splitCCG(current.getValue());
                 }
-                Pair<Pair<Integer, Integer>, CCGWord> p = generateCCGTypes(words, current.getKey(), types, pair.getValue());
-                deleteWords(p, words);
+                int index = generateCCGTypes(words, current.getKey(), types, pair.getValue());
+                words.remove(index);
                 ArrayList<Type> backtrack = backtrack(words, types, visited);
                 if (backtrack != null) {
                     return backtrack;
