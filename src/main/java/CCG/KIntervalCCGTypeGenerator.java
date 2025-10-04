@@ -7,44 +7,40 @@ import java.util.*;
 
 public class KIntervalCCGTypeGenerator extends CCGTypeGenerator {
 
-    private static Pair<Integer, Boolean> findIndex(ArrayList<CCGWord> words, int k, int current) throws WrongCCGException {
+    private static Pair<Integer, Boolean> findIndex(ArrayList<CCGWord> words, int k, int current) {
         int totalIndex = current, i = current;
-        while (totalIndex < current + k + 2) {
+        while (totalIndex < current + k + 1) {
             if (i == words.size()) {
                 i = 0;
             }
             CCGWord word = words.get(i);
-            if (word.size() > 1) {
-                if (totalIndex != current + k + 1 && word.getType().equals(Type.FORWARD)) {
-                    if (i + 1 < words.size()) {
-                        if (words.get(i + 1).size() > 1) {
-                            if (word.getCCG().equals(words.get(i + 1).getFirstCCG())) {
-                                return new Pair<>(i, false);
-                            }
-                            if (word.getCCG().equals(words.get(i + 1).toString())) {
-                                return new Pair<>(i, false);
-                            }
-                        } else {
-                            if (word.getCCG().equals(words.get(i + 1).getCCG())) {
-                                return new Pair<>(i, false);
-                            }
+            if (i + 1 < words.size()) {
+                CCGWord nextWord = words.get(i + 1);
+                if (word.getType() != null && word.getType().equals(Type.FORWARD)) {
+                    if (nextWord.size() > 1) {
+                        if (word.getCCG().equals(nextWord.getFirstCCG())) {
+                            return new Pair<>(i, false);
+                        }
+                        if (word.getCCG().equals(nextWord.toString())) {
+                            return new Pair<>(i, false);
                         }
                     } else {
-                        throw new WrongCCGException();
+                        if (word.getCCG().equals(nextWord.getCCG())) {
+                            return new Pair<>(i, false);
+                        }
                     }
-                } else {
-                    if (i - 1 >= 0 && word.getType().equals(Type.BACKWARD)) {
-                        if (words.get(i - 1).size() > 1) {
-                            if (word.getCCG().equals(words.get(i - 1).getFirstCCG())) {
-                                return new Pair<>(i, false);
-                            }
-                            if (word.getCCG().equals(words.get(i - 1).toString())) {
-                                return new Pair<>(i, false);
-                            }
-                        } else {
-                            if (word.getCCG().equals(words.get(i - 1).getCCG())) {
-                                return new Pair<>(i, false);
-                            }
+                }
+                if (nextWord.getType() != null && nextWord.getType().equals(Type.BACKWARD)) {
+                    if (word.size() > 1) {
+                        if (nextWord.getCCG().equals(word.getFirstCCG())) {
+                            return new Pair<>(i + 1, false);
+                        }
+                        if (nextWord.getCCG().equals(word.toString())) {
+                            return new Pair<>(i + 1, false);
+                        }
+                    } else {
+                        if (nextWord.getCCG().equals(word.getCCG())) {
+                            return new Pair<>(i + 1, false);
                         }
                     }
                 }
@@ -57,7 +53,7 @@ public class KIntervalCCGTypeGenerator extends CCGTypeGenerator {
 
     private static Pair<Integer, Boolean> extraposition(ArrayList<CCGWord> words, int k, int current) {
         int totalIndex = current, i = current;
-        while (totalIndex < current + k + 2) {
+        while (totalIndex < current + k + 1) {
             if (i == words.size()) {
                 i = 0;
             }
@@ -164,7 +160,7 @@ public class KIntervalCCGTypeGenerator extends CCGTypeGenerator {
         words.remove(removeIndex);
     }
 
-    private static ArrayList<Type> generateTypes(ArrayList<CCGWord> words, int k) throws WrongCCGException {
+    private static ArrayList<Type> generateTypes(ArrayList<CCGWord> words, int k) {
         ArrayList<Type> types = new ArrayList<>();
         int current = 0;
         while (words.size() > 1) {
@@ -174,7 +170,7 @@ public class KIntervalCCGTypeGenerator extends CCGTypeGenerator {
             }
             Type type = words.get(pair.getKey()).getType();
             merge(words, pair, types);
-            current = pair.getKey() + 1;
+            current = pair.getKey();
             if (type.equals(Type.BACKWARD)) {
                 current--;
             }

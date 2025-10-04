@@ -75,6 +75,9 @@ public class CCGWord {
     }
 
     public Type getType() {
+        if (types.isEmpty()) {
+            return null;
+        }
         return types.getLast();
     }
 
