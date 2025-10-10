@@ -119,13 +119,15 @@ public class KIntervalCCGTypeGenerator extends CCGTypeGenerator {
                     // backward composition
                     if (word.composition(words.get(index - 1))) {
                         if (isExtraPosition) {
-                            types.add(Type.EXTRA_POSITION_BACKWARD_CROSSED_COMPOSITION);
+                            types.add(Type.EXTRA_POSITION);
+                            types.add(Type.BACKWARD_CROSSED_COMPOSITION);
                         } else {
                             types.add(Type.BACKWARD_CROSSED_COMPOSITION);
                         }
                     } else {
                         if (isExtraPosition) {
-                            types.add(Type.EXTRA_POSITION_BACKWARD_COMPOSITION);
+                            types.add(Type.EXTRA_POSITION);
+                            types.add(Type.BACKWARD_COMPOSITION);
                         } else {
                             types.add(Type.BACKWARD_COMPOSITION);
                         }
@@ -133,10 +135,12 @@ public class KIntervalCCGTypeGenerator extends CCGTypeGenerator {
                 } else if (word.getCCG().equals(words.get(index - 1).toString())) {
                     // backward application
                     if (isExtraPosition) {
-                        types.add(Type.EXTRA_POSITION_BACKWARD);
+                        types.add(Type.EXTRA_POSITION);
+                        types.add(Type.BACKWARD);
                     } else {
                         if (words.get(index - 1).getUniversalDependency().endsWith("SUBJ")) {
-                            types.add(Type.TYPE_RAISING_FORWARD);
+                            types.add(Type.TYPE_RAISING);
+                            types.add(Type.FORWARD);
                         } else {
                             types.add(Type.BACKWARD);
                         }
@@ -146,10 +150,12 @@ public class KIntervalCCGTypeGenerator extends CCGTypeGenerator {
             } else if (word.getCCG().equals(words.get(index - 1).getCCG())) {
                 // backward application
                 if (isExtraPosition) {
-                    types.add(Type.EXTRA_POSITION_BACKWARD);
+                    types.add(Type.EXTRA_POSITION);
+                    types.add(Type.BACKWARD);
                 } else {
                     if (words.get(index - 1).getUniversalDependency().endsWith("SUBJ")) {
-                        types.add(Type.TYPE_RAISING_FORWARD);
+                        types.add(Type.TYPE_RAISING);
+                        types.add(Type.FORWARD);
                     } else {
                         types.add(Type.BACKWARD);
                     }
